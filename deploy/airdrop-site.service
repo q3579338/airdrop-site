@@ -1,0 +1,12 @@
+[Unit]
+Description=airdrop.satloot.com 静态页生成(从 riskdesk 侧车拉空投存档)
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/airdrop-site
+Environment=AIRDROP_API_BASE=http://127.0.0.1:5177
+Environment=AIRDROP_OUT_DIR=/var/www/airdrop-satloot
+ExecStart=/usr/bin/node /opt/airdrop-site/build.mjs
