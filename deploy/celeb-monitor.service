@@ -1,0 +1,24 @@
+[Unit]
+Description=名人/政客发币新闻监控(Google News + 币媒 RSS → 微信/Telegram 推送 + SQLite + grok 中文速览)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=riskdesk
+Group=riskdesk
+WorkingDirectory=/var/lib/celeb-monitor
+# 推送令牌与 grok 配置沿用 BTT 监控的;/etc/celeb-monitor.env 可选,放 CELEB_* 覆盖项
+EnvironmentFile=/etc/btt-monitor.env
+EnvironmentFile=-/etc/celeb-monitor.env
+Environment=CELEB_DB=/var/lib/celeb-monitor/celeb.sqlite
+Environment=CELEB_EXPORT=/var/lib/celeb-monitor/export.json
+Environment=HOME=/opt/riskdesk
+Environment=TZ=Asia/Shanghai
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/airdrop-site/celeb/celeb_monitor.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

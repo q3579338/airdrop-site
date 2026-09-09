@@ -1,0 +1,424 @@
+{
+ "generatedAt": "2026-09-09T14:42:10.181000+00:00",
+ "lastCheckAt": "2026-09-09T14:42:10.146000+00:00",
+ "lastOkAt": "2026-09-09T14:42:10.146000+00:00",
+ "lastError": null,
+ "failStreak": 0,
+ "checkEverySec": 600,
+ "feeds": [
+  "gnews:memecoin",
+  "gnews:meme-coin",
+  "gnews:celebrity-token",
+  "gnews:coin-named",
+  "theblock",
+  "coindesk",
+  "cointelegraph",
+  "decrypt"
+ ],
+ "watchlist": [
+  "Hunter Biden",
+  "Donald Trump",
+  "Eric Trump",
+  "Donald Trump Jr.",
+  "Barron Trump",
+  "Melania Trump",
+  "Kanye West",
+  "Andrew Tate",
+  "Iggy Azalea",
+  "Dave Portnoy",
+  "Anthony Scaramucci",
+  "Vivek Ramaswamy",
+  "RFK Jr.",
+  "Tucker Carlson",
+  "Nayib Bukele",
+  "Javier Milei",
+  "Andrew Callaghan",
+  "Elon Musk",
+  "Conor McGregor",
+  "Caitlyn Jenner",
+  "Logan Paul",
+  "Mr Beast",
+  "Matt Taibbi",
+  "Glenn Greenwald",
+  "Bari Weiss",
+  "Michael Shellenberger",
+  "Marjorie Taylor Greene",
+  "Eric Adams",
+  "Cristiano Ronaldo",
+  "Lionel Messi",
+  "Snoop Dogg",
+  "Drake",
+  "50 Cent",
+  "Floyd Mayweather",
+  "Vitalik Buterin",
+  "Joe Rogan"
+ ],
+ "count": 9,
+ "strongCount": 4,
+ "todayCount": 0,
+ "analyzedCount": 0,
+ "pendingCount": 0,
+ "articleCount": 145,
+ "rows": [
+  {
+   "id": 9,
+   "storyKey": "p:hunter-biden",
+   "level": "strong",
+   "person": "Hunter Biden",
+   "ticker": "LAPTOP",
+   "subscribe": "Substack「Where's Hunter」/ Channel 5 邮件列表",
+   "title": "Hunter Biden’s Son to Launch ‘LAPTOP’ Meme Coin on Sept. 9 in Apparent Jab at Trump",
+   "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE41VWZJVWdLOXoyUlVaWGkySmtCcnc4Xzc3Si1jQWo2YjdUV1VYYnNvNmhWUW9XczVMWEdhMzhfZ2dxM2p4bkh5QTk2S1dyVHY1R3hFZw?oc=5",
+   "source": "bloomingbit",
+   "summary": "Hunter Biden’s Son to Launch ‘LAPTOP’ Meme Coin on Sept. 9 in Apparent Jab at Trump bloomingbit",
+   "publishedTs": 1788793211000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 123,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "LAPTOP: Hunter Biden Meme Coin Launches on Base",
+     "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQbG5KYnNxMTNnUkZBWkJmWERkRkV1QjE2WHAzMXR4aEk4YkNIdHJja0Fqam5jNHp5ZzR3UFo3a2F3WHMya2tvOXc1bnpKUXRkRnpjZjZmQ1dEZ0JvejZsUmFOaG1DWjFGRFZqcFRMc0syV0dmUC1QMmMxZEoxUWYtVF94QQ?oc=5",
+     "source": "blockchain.news",
+     "publishedTs": 1788964235000
+    },
+    {
+     "title": "KuCoin Announces Launch of Hunter Biden’s Laptop Meme Coin",
+     "url": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNSHFlODJfTmU3NGZxZ255Sm00eGVLckIwZ21CLUxBRzhfOFJKaThWa3B3R050ZktyTTN1VGNDaWxsTnNmSjRfbWd4QTdJOUR0SmFTd2lJWlV0RXdpcERoUnM1dUdLTFRtamhYVlBlOVZwVnM3V1hfWk83R2tmeFJ1YkVDZEtnaVBkWnc?oc=5",
+     "source": "Coinfomania",
+     "publishedTs": 1788963815000
+    },
+    {
+     "title": "Hunter Biden’s LAPTOP token plunges 99% after launching on Base",
+     "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOc0FTZUR3NmRTZzB6aGFtLWdPRm1Bd2RGR1h6bWNWTkZ4NmlZZTNCX2pjcTV0T1VWT21WOG0yT2NOYTRhR3BiUGNoYkFWaTZ0SkdOY1R1M0tETnZfM1pSVnZ1UkpCVFJXelhhTTlpUlU3Wm42WVBtaXB5LTE4N2x1WEE2c1Vtb3JzcHhrRmdpS19KMVU?oc=5",
+     "source": "cryptobriefing.com",
+     "publishedTs": 1788962828000
+    },
+    {
+     "title": "Hunter Biden Launches $LAPTOP Meme Coin Based on Infamous Computer",
+     "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOOFdObVJQSG5OcUI3RjFod2hVT1FLUkdqQmVVZHRVeWkzTUZHLXozblVFTkliM2ZnRGFWdHNZeFB0YWZVcld6OGU5QnBWR190b3E2OXpfTkxUVG51M3FWX1BYazU4Si1yUlRwb2tBQ2xpX0xHenhBb3lzdEV4VGdacDRNbVdCUnJKOUd3aTl3WnJhT05HUWgwWUVmMy12X3pSbVRpYTdBY3BrbWtJVWRB?oc=5",
+     "source": "Hannity.com",
+     "publishedTs": 1788962478000
+    },
+    {
+     "title": "Hunter Biden's new LAPTOP token lost 98% of its value in under an hour after $1.6 billion debut",
+     "url": "https://www.coindesk.com/business/2026/09/09/hunter-biden-s-laptop-memecoin-debuts-at-usd1-6-billion-market-cap",
+     "source": "coindesk",
+     "publishedTs": 1788962277000
+    },
+    {
+     "title": "Hunter Biden’s LAPTOP Memecoin Peaks Just 2 Minutes After Launch as FDV Hits $144B",
+     "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNMkFYLWp0ZHpWazhiVEJrTXdLUUluaFk5YS1DV0RZbFlJV2lXOURQVHhZWnA0U1JmNzBPeXUwS0JvMWVUWWVMeHBTazdxTHJVLUxuNjlyek1UWlRSM09QUTcwbUFudXFQVkdaTG01SmdJdkozYzRzNG55ZlFnTFl0REMxTE4wQzA?oc=5",
+     "source": "CCN.com",
+     "publishedTs": 1788961777000
+    },
+    {
+     "title": "Hunter Biden-Linked Meme Coin LAPTOP Plunges 86.5% Within 30 Minutes of Launch",
+     "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTFBpN29QR0FxUEdIRGVDTzVvYlpUTzl1MVl1eW5UZ2JHZlJ1cEhKSUktQUdDbVZlZUQ5ZG5YdlNINzZmTXVPYVh4UHRyN21zSmFGZW9WWQ?oc=5",
+     "source": "bloomingbit",
+     "publishedTs": 1788959797000
+    },
+    {
+     "title": "Hunter Biden memecoin debuts on Base, slumps 86.5% in early trading",
+     "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOTllBWFF1SE80ZFY3cXQxN1N5azR1bnB2a0VvVDVUdWZ2bTVPNl9WMnJGUUNVY3h5ZElMTEkzeHRfOVR2cllMaFRaNkItYzUzdDl3b1J3eGpmX0gzaE9lYlV4TVhhNHZleXlEWDIyTHdFb3prcW5DN1VxYkFhbEs1ZUhPT2lXbW5fYW1UQWlZM1ZhUHlYZWhjMHd5RGRwVkpBQkVfZzJWQQ?oc=5",
+     "source": "Traders Union",
+     "publishedTs": 1788957744000
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "storyKey": "p:eric-adams",
+   "level": "strong",
+   "person": "Eric Adams",
+   "ticker": null,
+   "subscribe": "官网邮件列表",
+   "title": "Inside the botched launch of ex-NYC Mayor Eric Adams' new crypto token",
+   "url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOV095OHBjMm5YYjZDTWkyM2o2NktfaFBydG9tT09wb1JBY2RGX2FBMzFaYVJZeWhCdHhTWjI4VDlhQ3JTS1FESkRxYVpTUDd1LUhtNVZ2OGJvU29vN29VS25wOVZvb0VHTGdwRTM5UTExWE53aXBxR2NTWXdtWU5kZ05pVXFWclVSSVpGSGR5b2NLQdIBmgFBVV95cUxNbmluQzNBaUtTRmNkc3VnRjdyR3Bsb0hiazdxNHBTWHUwN3RtSFQ5SjZrb0ZXazZLT3g4MEdTU1EwQ1Znd2dUQ2ZOM0xpQm45eWJOeExSUTAxSVp2V3FaeWdjcktjWUV2MS1GdUlnemhBU05DZEZldkZ4WjhjeXVSQWVSNDlJQmxGak9LRlVnWFVWZTBRX2wzckFR?oc=5",
+   "source": "NBC New York",
+   "summary": "Inside the botched launch of ex-NYC Mayor Eric Adams' new crypto token NBC New York",
+   "publishedTs": 1768464000000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Inside the botched launch of ex-NYC Mayor Eric Adams' new crypto token",
+     "url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOV095OHBjMm5YYjZDTWkyM2o2NktfaFBydG9tT09wb1JBY2RGX2FBMzFaYVJZeWhCdHhTWjI4VDlhQ3JTS1FESkRxYVpTUDd1LUhtNVZ2OGJvU29vN29VS25wOVZvb0VHTGdwRTM5UTExWE53aXBxR2NTWXdtWU5kZ05pVXFWclVSSVpGSGR5b2NLQdIBmgFBVV95cUxNbmluQzNBaUtTRmNkc3VnRjdyR3Bsb0hiazdxNHBTWHUwN3RtSFQ5SjZrb0ZXazZLT3g4MEdTU1EwQ1Znd2dUQ2ZOM0xpQm45eWJOeExSUTAxSVp2V3FaeWdjcktjWUV2MS1GdUlnemhBU05DZEZldkZ4WjhjeXVSQWVSNDlJQmxGak9LRlVnWFVWZTBRX2wzckFR?oc=5",
+     "source": "NBC New York",
+     "publishedTs": 1768464000000
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "storyKey": "p:quinten-francois",
+   "level": "weak",
+   "person": "Quinten Francois",
+   "ticker": null,
+   "subscribe": "",
+   "title": "Quinten Francois: U.S. President family launches crypto token",
+   "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQZXg4ZEhRTlEtMzB4bHI1aXMzM3I2bFVnWmtMZ3BLRUN4eUMwY3lmM18weXNHMjh2QXJ6R1g1ckZWendOekdJemNBRDZkZGRlanpUMFNhUF9BbFB1OGlHQjYxZ0JHU3dGWDBEcXBkaURuZElOQW5XV3Q5ZW1LdV9MNzdn?oc=5",
+   "source": "Traders Union",
+   "summary": "Quinten Francois: U.S. President family launches crypto token Traders Union",
+   "publishedTs": 1756710000000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Quinten Francois: U.S. President family launches crypto token",
+     "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQZXg4ZEhRTlEtMzB4bHI1aXMzM3I2bFVnWmtMZ3BLRUN4eUMwY3lmM18weXNHMjh2QXJ6R1g1ckZWendOekdJemNBRDZkZGRlanpUMFNhUF9BbFB1OGlHQjYxZ0JHU3dGWDBEcXBkaURuZElOQW5XV3Q5ZW1LdV9MNzdn?oc=5",
+     "source": "Traders Union",
+     "publishedTs": 1756710000000
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "storyKey": "p:kanye-west",
+   "level": "strong",
+   "person": "Kanye West",
+   "ticker": null,
+   "subscribe": "yeezy.com 邮件列表",
+   "title": "Rapper Kanye West, Self-Proclaimed 'Nazi' Who Said 'Coins Prey on Fans,' Plans Memecoin Launch",
+   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOOXVGOHM1WDVXVnBSbHNoWmZ3WEQweW8xeEE4UklkZkEyVUZUZVp3SnhCNWZtRmh5M1JjSm53WDFtQmZiTlNOcTNyUURkMWdPQnBqNDlKU2d1NXZVN2ZnMnJWSVowOVZBSXpuTkN4ZC1OY2FjSVVtaEljQURjR21xWnE0SlVVZV93NHEwenFydXo4am8wTkFjVnlmUXRWOXpFUE53elNudURHM2xrMm1Vc2UwRnI1MHM?oc=5",
+   "source": "coindesk.com",
+   "summary": "Rapper Kanye West, Self-Proclaimed 'Nazi' Who Said 'Coins Prey on Fans,' Plans Memecoin Launch coindesk.com",
+   "publishedTs": 1740124800000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Rapper Kanye West, Self-Proclaimed 'Nazi' Who Said 'Coins Prey on Fans,' Plans Memecoin Launch",
+     "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOOXVGOHM1WDVXVnBSbHNoWmZ3WEQweW8xeEE4UklkZkEyVUZUZVp3SnhCNWZtRmh5M1JjSm53WDFtQmZiTlNOcTNyUURkMWdPQnBqNDlKU2d1NXZVN2ZnMnJWSVowOVZBSXpuTkN4ZC1OY2FjSVVtaEljQURjR21xWnE0SlVVZV93NHEwenFydXo4am8wTkFjVnlmUXRWOXpFUE53elNudURHM2xrMm1Vc2UwRnI1MHM?oc=5",
+     "source": "coindesk.com",
+     "publishedTs": 1740124800000
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "storyKey": "p:donald-trump",
+   "level": "strong",
+   "person": "Donald Trump",
+   "ticker": "TRUMP",
+   "subscribe": "gettrumpmemes.com 邮件列表 / Truth Social",
+   "title": "President-elect Trump launches own cryptocurrency meme coin ahead of inauguration",
+   "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPLVBzN25KTUg3UDY5czhrN0RTenE2empQMjBtS2gzQlpmSkFDMTEwbnowZWhIQlhEVjdfNGkyUGtGX0t4ZTFUVDdBam9mb0FTYXYzcmFJRHFNNkcydHE3WGNZcFZBdTFGZlhMSEVDTjJxNHpMaDlzU19jQmJOSVhRbENEVlJ0TGNBdDgtdnJZTnQ1MXBqemg0ZHNXSnJwSllTV1FQMGYxLThXNjVZYlVV0gG0AUFVX3lxTE1YYTdyRzltX2F0WjM0NFFqdFQyV0VXUG9COFdIVlJ1SEs3dlJfOUdhSUQzOXh1QUpxSktGX29hUjBXaTVIbjdiZWxXbVh0WWNGaE5NM2N2UjJiejlEbzM2blFaVkcyUmVRd3lLZUozRTJOdnduNEk2SnBGZlU0Q290WlNQVWtNcnVBZ0l5ME1vYjBaNGEtX1lYcXJjc2V5SXF5TW1VWjBmaFpqckwwbkRVMFBIZQ?oc=5",
+   "source": "Fox Business",
+   "summary": "President-elect Trump launches own cryptocurrency meme coin ahead of inauguration Fox Business",
+   "publishedTs": 1737187200000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 14,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "TRUMP Drops 3.71% Amid Rival Memecoin Launch and Unlocks",
+     "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1WLW5LcE42YjlnZFRpNG5xUkpoVGRUb1NLUnZxa000dUp3a0lBMWcwSUo5dmlyb0EzZ1VOcjBMVzZETnU2OVlKSS1rRWFnUU1acE8zRUhXYUVvaW1LRTNIQ0RMeGpGQ3VkQml2cnY3a2Y?oc=5",
+     "source": "CoinMarketCap",
+     "publishedTs": 1788876240000
+    },
+    {
+     "title": "Joe Biden’s son to launch memecoin, will send to TRUMP holde|Cointelegraph",
+     "url": "https://news.google.com/rss/articles/CBMi2gNBVV95cUxOVS1Ic3c4ZW5SdXMtSVZaWkxTX2VOaGpSU1BIcTh6bFdmSUg1cVFEU2JUaHBONl8yY0pWaUVOX3BkenJscTgzNkxKT2NraHVKS3MteTUwVWxfUFJoc3pCd0Vicy1oVHhTMmJ5eFRYSHBaV0FhM2ZqdkU5R2hvMXdxckpiZ1Q4TXFMQ1p6aWJKUVZ4ZmJFdktxREl2Yno1ZWVqRG1tcEd5bFhWV3hQSGJlaGpHNzVQazdzUm1KMTlGaE51bzh1dzZNMDd1dmRibkJKSlo5aTFfdlJ4bUFKSmJfcXR3dU41LTlENGhTMjlaVmJ0cTBFLWtJOUFNWnpYd3VHbVJFZ3dBN3FwcTBJU1dKSEhzVVJLLU9GNGFFMUNlYXFIRFdoRGFjSkY1QWllX3dELVdwM0FnMlFUay14a0FlZGpCd1VhZmdFMlpkalljR0NBQm9fWkVBSlJlZUVGaEp0Y2tGSldfZ3NFRm5UTlVTaVBPb2J3UkZMZlZsNlpJb3l0X0ZfNlc3MHd5ZkRRQlZkbkJWLUZJOGZnVTBNUHFhek1RQ3ItYkc5dFBGWGljcHZLUml0cFREQTA4bExyMEFpcTlNQU9lbFowRUp3elhlQjBOTWZENllaRUE?oc=5",
+     "source": "خبرپو",
+     "publishedTs": 1788809996000
+    },
+    {
+     "title": "Joe Biden’s son to launch memecoin, will send to TRUMP holders: WSJ",
+     "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxORjM4S3J3QlhDQnI4TVhaZGgwR2V2Vk1kWUxqN3kyTUYxQlRrWFVHcTF6NWFWZ3hCbmY0THp1OHBsalRQX21nLVlqXy1LYjhSUHVhZkprS2Fkc0ZpTW9oQ0p0ZThWSFUwaldJMHJxUGhiTE01QzJscTdheXRWaU8yOWd0eVVjOEtqdDJVUWtvUloxYW93dkRQZ3VlczZNZW1PbUlpU202ZTRtYnhzb0tXVG5mcTIxZDBGcTRObFNwTUNHVGdKMjBSMw?oc=5",
+     "source": "TradingView",
+     "publishedTs": 1788807227000
+    },
+    {
+     "title": "Joe Biden’s son to launch LAPTOP coin on Base, taking aim at TRUMP: Report",
+     "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTFBEY3R2dzFQRXE5b0JnNmhJMW9UbWZ6VHJSeHNBek1xMnd0RUlwX1dZZHRQNUQ1MmVNRGFlSS1MZlc2STRhTktib1FOQ2tFRmo3RFpobTNoOVFWaW5jUVVacHNHd9IBY0FVX3lxTFBEY3R2dzFQRXE5b0JnNmhJMW9UbWZ6VHJSeHNBek1xMnd0RUlwX1dZZHRQNUQ1MmVNRGFlSS1MZlc2STRhTktib1FOQ2tFRmo3RFpobTNoOVFWaW5jUVVacHNHdw?oc=5",
+     "source": "Bitget",
+     "publishedTs": 1788797109000
+    },
+    {
+     "title": "BREAKING: Former U.S. President Joe Biden's Son Is Launching His Own Memecoin - Will It Crash Like TRUMP Did?",
+     "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNcjJyVVJkWU1DUEl3dXZzdDFJeTlHcTNlVHRpUWJhMnYtdk5Ha1FLZnR5MkFwa0Y1Ymx5V0dtODRpZk1sRmNINmdqVWk1dEF6b3lIckk5RDQzcmp0REE4TXJXbkpxY2JVWWdESUZZSnk5ejhzaUtObjhmZWthYjVnUXBlRzVGLTlvZk92VF9yWUV5NUtBb3NvUzRpb29PNG11U1FMeXI0czVGbGJkU1U3M3ptaGVrWFZEcXhnNjIyc2xUYnJfbkhxVFBlcw?oc=5",
+     "source": "Bitcoin Sistemi",
+     "publishedTs": 1788793341000
+    },
+    {
+     "title": "Merkley, Warren, Van Hollen, Sanders Probe Trump-Backed Board of Peace’s Plan to Rebuild Gaza with Shady Cryptocurrency",
+     "url": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxPajhZQk0teGJjalpIOTJ5S0tqVGliMExLeXdwVm8tZEc5a2tOQWFDUmluRlhxVG51dFdHNHkxY0RqeXVNYXBoRTVlMllnaXpfdkxFeUFlN1hseTRaUnhqODNHSG8xcGNWaDdha0VPUEhpWEtqZGljSFFiWEl5Ni1RTXdlVkxFaFNLZ1lSdkhwdzROR3BlRVdQU1hha0VTSldUdUtFeWdEVmktaURfRkgyaHFWUVFYN1MtQUU5YWlORUUtRndIU3FpQ3IzRjZxb21fTUplYk9BZEpqSUQ1YXRDWQ?oc=5",
+     "source": "merkley.senate.gov",
+     "publishedTs": 1776409200000
+    },
+    {
+     "title": "Trump family profits from launch of World Liberty Financial crypto token - ABC News",
+     "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPYl9FbkdtSFBsNVAxcHhyWFAxUGFZWmVEdUN3RnBHWXJaUm1McmJEZm1KbWNWM3BSVEVBcWV2SjBqRTNSSjhubDZRaHp3b2NrcXVSbjk4b3B5alNCejd5c3JhMklCUDF3ZmxHQk5qTFc3cHpRelhiQXBEQUpsY1QyaU1xVDNNX09EdUhtZk1CbExEcXdEamNhVGJvaUNwdXpTWnfSAacBQVVfeXFMTlZZYk8wWjRESk9FZlZKMWctUmlkQmZsNGpzZjloNlh2akdKdTZEUUV2cGVzOG1LVGU2cG1xN29FVHltVmZ6SzU0aXBESWxKYTFlQU5WbFdQWm8zanRta3BHVWtWVjkzUlUzRmVwNmtteFZYTGdPZFJ5M3gtQk5Yb3BISUVZUmRqTm1HWEtmOHBsRU94a0JQYjZPZGNVTmRhR2g1WjZzbkU?oc=5",
+     "source": "Breaking News, Latest News and Videos",
+     "publishedTs": 1756796400000
+    },
+    {
+     "title": "Gavin Newsom Teases Meme Token Targeting Trump",
+     "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFBwcUpMNGZtQVpDRndZNzlBZ0x0R0hjZndCSnI5LUY3NVFnSHFTN0E3X1Vob3MzYUE3RTlObWE4LTdCNVotTVFXdlRqYkxMT2g5RVh1a3pJVzlzdw?oc=5",
+     "source": "cryptonews.net",
+     "publishedTs": 1756710000000
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "storyKey": "p:driven-influencer-launches",
+   "level": "weak",
+   "person": "Driven Influencer Launches",
+   "ticker": "ANITA",
+   "subscribe": "",
+   "title": "Anita AI: The First AI-Driven Influencer Launches Her Own Token, $ANITA",
+   "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQVm01eTlBRXdidURFampDREtFa0F0ZnZoR0p2eXZWYW5aMmFEelNjRnVfQnNRUC0tTThGT2EzbHdfZTdkLTJvbFg1bVFCOE16OHpCVUN4WkRQUWVSZUpvOG01cVZZWl9JSnhrSnpydXZpU2xoS1FJdjQ5MEd6NXpZWkh5V1NOcWxZXzFqVmg1TW1zcTg3Uk43RGd3?oc=5",
+   "source": "Decrypt",
+   "summary": "Anita AI: The First AI-Driven Influencer Launches Her Own Token, $ANITA Decrypt",
+   "publishedTs": 1733731200000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 2,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Anita AI: The First AI-Driven Influencer Launches Her Own Token, $ANITA",
+     "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQVm01eTlBRXdidURFampDREtFa0F0ZnZoR0p2eXZWYW5aMmFEelNjRnVfQnNRUC0tTThGT2EzbHdfZTdkLTJvbFg1bVFCOE16OHpCVUN4WkRQUWVSZUpvOG01cVZZWl9JSnhrSnpydXZpU2xoS1FJdjQ5MEd6NXpZWkh5V1NOcWxZXzFqVmg1TW1zcTg3Uk43RGd3?oc=5",
+     "source": "Decrypt",
+     "publishedTs": 1733731200000
+    },
+    {
+     "title": "Anita AI: the First AI-Driven Influencer Launches Her Own Token, $ANITA",
+     "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTFBEYV8zYzdiZmpVWG50SGVfcnFiRjlFTFg0ZjJ1YXZLUDFoaURNT2xUVlJqNGRoa1JhaGktQ0RBRXM1M1lsMXVGUVRyQktXczdUblM5cjFBRlVpeUprbHRYcU5Law?oc=5",
+     "source": "Binance",
+     "publishedTs": 1733731200000
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "storyKey": "h:4dba5fcb6ac57735",
+   "level": "weak",
+   "person": null,
+   "ticker": null,
+   "subscribe": "",
+   "title": "R&B singer Akon launches his own cryptocurrency card Akoin",
+   "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOcFV6R0swdGtBYjFaVXZ4bEFKNmFIVlMzbzk3U1BXMkZ1U0xTVnp4UzBfSUVhOXlNMFlDY1htbzRmZVVKMUladHZrb1lfOWRSQXhtZmtaUGlzRVRHUThHOUczMGdXMno0ZHB6V2JVNXdlcWpxeXk3UE1rNVRwUEF2ZXNzZ0dkSGN1c01ULUYyb2tpU2dqQUJ6WEthcFdRV3NIb2hUeEFR?oc=5",
+   "source": "Citizen Digital",
+   "summary": "R&B singer Akon launches his own cryptocurrency card Akoin Citizen Digital",
+   "publishedTs": 1637827200000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "R&B singer Akon launches his own cryptocurrency card Akoin",
+     "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOcFV6R0swdGtBYjFaVXZ4bEFKNmFIVlMzbzk3U1BXMkZ1U0xTVnp4UzBfSUVhOXlNMFlDY1htbzRmZVVKMUladHZrb1lfOWRSQXhtZmtaUGlzRVRHUThHOUczMGdXMno0ZHB6V2JVNXdlcWpxeXk3UE1rNVRwUEF2ZXNzZ0dkSGN1c01ULUYyb2tpU2dqQUJ6WEthcFdRV3NIb2hUeEFR?oc=5",
+     "source": "Citizen Digital",
+     "publishedTs": 1637827200000
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "storyKey": "p:boxer-manny-pacquiao",
+   "level": "weak",
+   "person": "Boxer Manny Pacquiao",
+   "ticker": null,
+   "subscribe": "",
+   "title": "Boxer Manny Pacquiao launches personalized crypto token",
+   "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNRThOWUVqaDdLOUp2NHZoYUE1YmV2SnFsWVN5R25xN3hVR05uLVVsZkhJcERyZ0JTSjVNSU1IUFk3TjhaZ29uLXlsd29NdnY1V3B4NVQ3YVFjQ0k3elp5dUFOUVFCLThzd2p5czM2dF9na2kwOUY1YUxSM29vcTAyTUJ2UFFkS1FsTmVhSTBWX1ZVN1E?oc=5",
+   "source": "bankingdive.com",
+   "summary": "Boxer Manny Pacquiao launches personalized crypto token bankingdive.com",
+   "publishedTs": 1567494000000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Boxer Manny Pacquiao launches personalized crypto token",
+     "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNRThOWUVqaDdLOUp2NHZoYUE1YmV2SnFsWVN5R25xN3hVR05uLVVsZkhJcERyZ0JTSjVNSU1IUFk3TjhaZ29uLXlsd29NdnY1V3B4NVQ3YVFjQ0k3elp5dUFOUVFCLThzd2p5czM2dF9na2kwOUY1YUxSM29vcTAyTUJ2UFFkS1FsTmVhSTBWX1ZVN1E?oc=5",
+     "source": "bankingdive.com",
+     "publishedTs": 1567494000000
+    }
+   ]
+  },
+  {
+   "id": 1,
+   "storyKey": "p:singer-akon-to",
+   "level": "weak",
+   "person": "Singer Akon To",
+   "ticker": null,
+   "subscribe": "",
+   "title": "Singer Akon To Launch His Own Cryptocurrency",
+   "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEVBTDFUa3J1aldxMW1Lcmtwbk5DNVZrMGtSUUlPeVQ0d1Z3VzExcWQ2TExuNUhUcU8xZHA5eVM5cFpad0dmdFMwRXI3am1saVlmM3lLeWN2Y3RyZjJSeVM3ekNZcG9mekgtLXdoa1pVZjRhVklUdGswbnRfaWhqRDFmZV94Zw?oc=5",
+   "source": "WeeTracker",
+   "summary": "Singer Akon To Launch His Own Cryptocurrency WeeTracker",
+   "publishedTs": 1529564400000,
+   "firstSeenTs": 1788964930146,
+   "lastSeenTs": 1788964930146,
+   "mentions": 1,
+   "seeded": true,
+   "pushedWx": false,
+   "analysisStatus": "skipped",
+   "analysis": null,
+   "analysisTs": null,
+   "analysisError": null,
+   "articles": [
+    {
+     "title": "Singer Akon To Launch His Own Cryptocurrency",
+     "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEVBTDFUa3J1aldxMW1Lcmtwbk5DNVZrMGtSUUlPeVQ0d1Z3VzExcWQ2TExuNUhUcU8xZHA5eVM5cFpad0dmdFMwRXI3am1saVlmM3lLeWN2Y3RyZjJSeVM3ekNZcG9mekgtLXdoa1pVZjRhVklUdGswbnRfaWhqRDFmZV94Zw?oc=5",
+     "source": "WeeTracker",
+     "publishedTs": 1529564400000
+    }
+   ]
+  }
+ ]
+}
