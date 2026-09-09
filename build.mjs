@@ -23,6 +23,10 @@ const SITE_URL = 'https://airdrop.satloot.com/';
 const SOURCE_URL = 'https://earn.satloot.com/app/#/airdrop';
 const BTT_BOARD_URL = 'https://bitcointalk.org/index.php?board=159.0';
 const TZ = 'Asia/Shanghai';
+const OG_IMAGE = `${SITE_URL}og.png`;          // static/og.png(1200×630,tools/make-og.mjs 生成),每次生成时原样复制到输出目录
+const ORG_URL = 'https://satloot.com/';
+const GITHUB_URL = 'https://github.com/q3579338';
+const STATIC_DIR = path.join(__dirname, 'static');
 
 async function getJson(pathname, fixtureName) {
   if (FIXTURE_DIR) {
@@ -73,6 +77,7 @@ const LOCALES = {
     code: 'zh', htmlLang: 'zh-CN', ogLocale: 'zh_CN', ogLocaleAlt: 'en_US', dir: '',
     switchLabel: 'EN', switchLang: 'en',
     brand: 'SatLoot · 空投雷达',
+    siteName: 'SatLoot 空投雷达',
     navLabel: '大类', navAirdrop: '空投项目', navBtt: 'BTT 新帖',
     filterLabel: '筛选', sortLabel: '排序', empty: '没有匹配的条目',
     tz: '北京时间',
@@ -85,7 +90,7 @@ const LOCALES = {
     enumMining: (v) => v,
     airdrop: {
       title: '空投雷达 · SatLoot Airdrop',
-      description: (n, scan) => `${n} 个正在进行的加密空投项目:链、参与方式、阶段、热度证据与风险,按项目去重并标注首次发现日期。最近扫描 ${scan}(北京时间)。`,
+      description: (n, scan) => `${n} 个正在进行的加密空投项目:链、参与方式、阶段、热度证据与风险,按项目去重并标注首次发现日期与上榜次数。最近扫描 ${scan}(北京时间)。`,
       heroTitle: '正在进行的空投项目',
       heroLede: (src) => `由 <a href="${src}" rel="noopener">earn.satloot.com</a> 的空投雷达每日自动检索热门空投并存档:同一项目只出现一次,标注首次发现日期与上榜次数。字段取最近一次扫描的结论。`,
       langNote: '',
@@ -102,7 +107,7 @@ const LOCALES = {
     btt: {
       title: 'BTT 新帖 · SatLoot Airdrop',
       description: (total, today, analyzed, check) => `bitcointalk 山寨币公告板(Altcoin Announcements)新帖监控:已收录 ${total} 帖,今日新帖 ${today},${analyzed} 帖带 AI 中文速览(类型、链、代币、分发方式、风险信号、评分)。最近巡检 ${check}(北京时间)。`,
-      descriptionOffline: 'bitcointalk 山寨币公告板(Altcoin Announcements)新帖监控,带 AI 中文速览。',
+      descriptionOffline: 'bitcointalk 山寨币公告板(Altcoin Announcements)新帖监控:新帖立刻入库,AI 读首楼正文生成中文速览(类型、链、代币、分发方式、风险信号、评分)。',
       heroTitle: 'BTT 山寨板新帖',
       heroLede: (board, minutes) => `<a href="${board}" target="_blank" rel="noopener nofollow">bitcointalk Altcoin Announcements</a> 板块每 ${minutes} 分钟巡检一次:新帖立刻入库,AI 读首楼正文生成中文速览与 0–10 评分。评分只是粗筛,原帖为准。`,
       health: (n, err) => `巡检连续失败 ${n} 次,最新错误:${err}`,
@@ -125,6 +130,7 @@ const LOCALES = {
     code: 'en', htmlLang: 'en', ogLocale: 'en_US', ogLocaleAlt: 'zh_CN', dir: 'en/',
     switchLabel: '中文', switchLang: 'zh',
     brand: 'SatLoot · Airdrop Radar',
+    siteName: 'SatLoot Airdrop Radar',
     navLabel: 'Sections', navAirdrop: 'Airdrops', navBtt: 'BTT threads',
     filterLabel: 'Filter', sortLabel: 'Sort', empty: 'Nothing matches',
     tz: 'UTC+8',
@@ -137,7 +143,7 @@ const LOCALES = {
     enumMining: (v) => BTT_MINING_EN[v] ?? v,
     airdrop: {
       title: 'Airdrop Radar · SatLoot Airdrop',
-      description: (n, scan) => `${n} ongoing crypto airdrop projects: chain, how to participate, stage, buzz evidence and risks, deduplicated by project with first-seen dates. Last scan ${scan} (UTC+8).`,
+      description: (n, scan) => `${n} ongoing crypto airdrops: chain, how to join, stage, buzz and risks, deduplicated by project with first-seen dates. Last scan ${scan} (UTC+8).`,
       heroTitle: 'Ongoing airdrop projects',
       heroLede: (src) => `The airdrop radar at <a href="${src}" rel="noopener">earn.satloot.com</a> searches for trending airdrops every day and archives them: each project appears once, tagged with its first-seen date and how many times it has been listed. Fields reflect the latest scan.`,
       langNote: 'Project descriptions are shown as archived (Chinese).',
@@ -153,7 +159,7 @@ const LOCALES = {
     },
     btt: {
       title: 'BTT New Threads · SatLoot Airdrop',
-      description: (total, today, analyzed, check) => `New-thread monitor for the bitcointalk Altcoin Announcements board: ${total} threads indexed, ${today} new today, ${analyzed} with an AI digest in Chinese (type, chain, token, distribution, red flags, score). Last check ${check} (UTC+8).`,
+      description: (total, today, analyzed, check) => `New threads on the bitcointalk Altcoin Announcements board: ${total} indexed, ${today} new today, ${analyzed} with AI digests. Last check ${check} (UTC+8).`,
       descriptionOffline: 'New-thread monitor for the bitcointalk Altcoin Announcements board, with AI digests in Chinese.',
       heroTitle: 'New threads on BTT Altcoin Announcements',
       heroLede: (board, minutes) => `The <a href="${board}" target="_blank" rel="noopener nofollow">bitcointalk Altcoin Announcements</a> board is checked every ${minutes} minutes: new threads are indexed immediately and an AI reads the opening post to write a Chinese digest with a 0–10 score. The score is a rough filter; the original thread is authoritative.`,
@@ -373,6 +379,8 @@ function pageCommon(page, L, generatedTs) {
     URL_EN: pageUrl(page, en),
     OG_LOCALE: L.ogLocale,
     OG_LOCALE_ALT: L.ogLocaleAlt,
+    SITE_NAME: L.siteName,
+    OG_IMAGE,
     BRAND: L.brand,
     LANG_NOTE: L[page].langNote ? `<p class="langnote">${esc(L[page].langNote)}</p>` : '',
     T_FILTER: L.filterLabel,
@@ -383,6 +391,38 @@ function pageCommon(page, L, generatedTs) {
   };
 }
 
+/** JSON-LD:Organization + WebSite + WebPage + 本页列表前 20 项,一段 @graph;`<` 转义,免得条目文本里出现 </script> */
+function jsonLd(page, L, { title, description, generatedTs, listName, items }) {
+  const site = `${SITE_URL}${L.dir}`;
+  const url = pageUrl(page, L);
+  const graph = [
+    { '@type': 'Organization', '@id': `${ORG_URL}#organization`, name: 'SatLoot', url: ORG_URL, sameAs: [GITHUB_URL] },
+    { '@type': 'WebSite', '@id': `${site}#website`, url: site, name: L.siteName, inLanguage: L.htmlLang, publisher: { '@id': `${ORG_URL}#organization` } },
+    {
+      '@type': 'WebPage', '@id': url, url, name: title, description, inLanguage: L.htmlLang, isPartOf: { '@id': `${site}#website` },
+      primaryImageOfPage: { '@type': 'ImageObject', url: OG_IMAGE, width: 1200, height: 630 }, dateModified: new Date(generatedTs).toISOString(),
+    },
+    {
+      '@type': 'ItemList', name: listName, inLanguage: L.htmlLang, numberOfItems: items.length,
+      itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: plain(it.name), ...(it.url ? { url: it.url } : {}) })),
+    },
+  ];
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+}
+
+/** static/ 里的文件(OG 分享图等)原样复制到输出目录;内容没变就不动,免得每 5 分钟改一次 mtime */
+async function copyStatic() {
+  let entries;
+  try { entries = await fs.readdir(STATIC_DIR, { withFileTypes: true }); } catch { return; }
+  for (const e of entries) {
+    if (!e.isFile()) continue;
+    const buf = await fs.readFile(path.join(STATIC_DIR, e.name));
+    const dst = path.join(OUT_DIR, e.name);
+    try { if (buf.equals(await fs.readFile(dst))) continue; } catch {}
+    await writeAtomic(dst, buf);
+  }
+}
+
 async function writeAtomic(file, content) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   const tmp = `${file}.tmp-${process.pid}`;
@@ -391,6 +431,7 @@ async function writeAtomic(file, content) {
 }
 
 async function main() {
+  await copyStatic();
   const [projects, status, reports, btt] = await Promise.all([
     getJson('/api/airdrop/projects?limit=1000', 'projects.json'),
     getJson('/api/airdrop/status', 'status.json'),
@@ -427,10 +468,12 @@ async function main() {
   // ---- 空投项目页 ----
   const airdropPage = (L) => {
     const T = L.airdrop;
+    const description = T.description(rows.length, fmtDateTime(latestOkTs, L));
     return render(template, {
       ...pageCommon('airdrop', L, generatedTs),
       PAGE_TITLE: T.title,
-      DESCRIPTION: T.description(rows.length, fmtDateTime(latestOkTs, L)),
+      DESCRIPTION: description,
+      JSON_LD: jsonLd('airdrop', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: rows.slice(0, 20).map((r) => ({ name: r.name })) }),
       NAV: nav('airdrop', counts, L),
       HERO_TITLE: T.heroTitle,
       HERO_LEDE: T.heroLede(SOURCE_URL),
@@ -463,10 +506,12 @@ async function main() {
       bttCards = bttRows.map((p) => renderBttCard(p, todayMs, L)).join('\n');
     }
     const bttHealth = btt && btt.failStreak > 0 ? `<span class="warn">${T.health(btt.failStreak, esc(btt.lastError || ''))}</span>` : '';
+    const description = btt ? T.description(bttTotal, bttToday, bttAnalyzed, fmtDateTime(bttLastOk, L)) : T.descriptionOffline;
     return render(template, {
       ...pageCommon('btt', L, generatedTs),
       PAGE_TITLE: T.title,
-      DESCRIPTION: btt ? T.description(bttTotal, bttToday, bttAnalyzed, fmtDateTime(bttLastOk, L)) : T.descriptionOffline,
+      DESCRIPTION: description,
+      JSON_LD: jsonLd('btt', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: bttRows.slice(0, 20).map((p) => ({ name: p.title, url: p.url })) }),
       NAV: nav('btt', counts, L),
       HERO_TITLE: T.heroTitle,
       HERO_LEDE: T.heroLede(BTT_BOARD_URL, bttMinutes) + bttHealth,

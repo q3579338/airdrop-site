@@ -8,7 +8,8 @@
 | `/btt/` BTT 新帖 | `btt/btt_monitor.py` 导出的 `export.json`(bitcointalk 山寨板新帖 + grok 中文速览) |
 | `/en/` `/en/btt/` | 同两页的英文壳(`build.mjs` 里 `LOCALES.en`),互带 hreflang;项目描述/速览是中文来源,英文页原样保留并在顶部注明 |
 
-- `build.mjs` 生成器:拉两路数据 → 同一 `template.html` 按 `LOCALES.zh` / `LOCALES.en` 各渲染一遍 → 原子写 `index.html` `btt/index.html` `en/index.html` `en/btt/index.html` `data.json` `btt/data.json` `robots.txt` `sitemap.xml`(四个 URL 带 alternate)
+- `build.mjs` 生成器:拉两路数据 → 同一 `template.html` 按 `LOCALES.zh` / `LOCALES.en` 各渲染一遍 → 原子写 `index.html` `btt/index.html` `en/index.html` `en/btt/index.html` `data.json` `btt/data.json` `robots.txt` `sitemap.xml`(四个 URL 带 alternate)。每页 head 带 canonical / hreflang / OG + Twitter 卡片 / JSON-LD(Organization + WebSite + WebPage + ItemList 前 20 项)
+- `static/` 不经模板的静态文件,目前只有 OG 分享图 `og.png`(1200×630,`node tools/make-og.mjs` 用 resvg + 系统字体生成,产物进 git)。`build.mjs` 每次跑都先把它原样复制到输出目录;定时生成只写具体文件、不清目录,不会冲掉它
 - `template.html` 布局模板(筛选/搜索/排序纯前端通用脚本:tab 的 `data-filter=x` 对应卡片 `data-x="1"`,排序按 `data-<key>` 数值降序)。中文页首部有一段极小内联脚本:没记过语言选择且浏览器语言不是中文就 `location.replace` 到 `/en/`;导航里的语言切换链接把选择记进 `localStorage.lang`,爬虫 UA 不跳转
 - `btt/btt_monitor.py` BTT 监控:原版 `autofish/monitorbitcoin.py` 的推送逻辑原样保留(TG 每帖一条 + 微信一轮合并一条,首次只记基准),新增 SQLite 落库、后台线程 grok 速览、export.json 导出
 - `deploy/` nginx 站点、`airdrop-site` 服务+定时器、`btt-monitor` 服务与 env 模板、`setup.sh` 一键安装(幂等)
