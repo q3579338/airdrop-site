@@ -1,15 +1,20 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="{{HTML_LANG}}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>空投雷达 · SatLoot Airdrop</title>
+{{HEAD_SCRIPT}}<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PAGE_TITLE}}</title>
 <meta name="description" content="{{DESCRIPTION}}">
-<link rel="canonical" href="{{SITE_URL}}">
+<link rel="canonical" href="{{CANONICAL}}">
+<link rel="alternate" hreflang="zh-CN" href="{{URL_ZH}}">
+<link rel="alternate" hreflang="en" href="{{URL_EN}}">
+<link rel="alternate" hreflang="x-default" href="{{URL_ZH}}">
 <meta property="og:type" content="website">
-<meta property="og:title" content="空投雷达 · SatLoot Airdrop">
+<meta property="og:title" content="{{PAGE_TITLE}}">
 <meta property="og:description" content="{{DESCRIPTION}}">
-<meta property="og:url" content="{{SITE_URL}}">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:locale" content="{{OG_LOCALE}}">
+<meta property="og:locale:alternate" content="{{OG_LOCALE_ALT}}">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2230%22 fill=%22%23f59e0b%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2218%22 fill=%22none%22 stroke=%22%23fff7ed%22 stroke-width=%224%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%226%22 fill=%22%23fff7ed%22/%3E%3C/svg%3E">
 <style>
@@ -18,27 +23,33 @@
   --text:#1f1d1a;--text-dim:#6b665c;--text-faint:#9a9488;
   --accent:#b45309;--accent-bg:#fff4e0;--accent-border:#f2c979;
   --new:#166534;--new-bg:#ecfdf3;--new-border:#a7dfb8;
+  --low:#9f1239;--low-bg:#fff1f2;--low-border:#fecdd3;
   --risk:#9f1239;--shadow:0 1px 2px rgba(31,29,26,.05),0 6px 20px -12px rgba(31,29,26,.25);
+  --dt-w:76px;
 }
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#15140f;--surface:#1e1c17;--surface-2:#24211b;--border:#33302a;
-    --text:#ece7dc;--text-dim:#a8a195;--text-faint:#736d62;
-    --accent:#fbbf24;--accent-bg:#2c2412;--accent-border:#6b5320;
-    --new:#86efac;--new-bg:#12261a;--new-border:#22563a;
-    --risk:#fda4af;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -14px rgba(0,0,0,.7);
-  }
-}
+html:lang(en){--dt-w:110px}
+/* house rule: every new site is light/white only, never follows the system dark mode */
 *{box-sizing:border-box}
-html{color-scheme:light dark}
+html{color-scheme:light}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--accent)}
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
-.hero{padding:44px 0 26px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--surface-2),var(--bg))}
+.hero{padding:30px 0 26px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--surface-2),var(--bg))}
+.topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px}
 .brand{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--text-dim);text-transform:uppercase}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-bg)}
-h1{margin:10px 0 8px;font-size:clamp(26px,4vw,36px);line-height:1.2;letter-spacing:-.01em}
-.lede{margin:0;max-width:720px;color:var(--text-dim);font-size:15px}
+.navwrap{display:inline-flex;align-items:center;gap:10px}
+.cats{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.lang-switch{display:inline-flex;align-items:center;padding:7px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12.5px;font-weight:700;color:var(--text-dim);text-decoration:none;transition:.15s}
+.lang-switch:hover{color:var(--accent);border-color:var(--accent-border)}
+.langnote{margin:8px 0 0;max-width:760px;font-size:12px;color:var(--text-faint)}
+.cat{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;font-size:14px;font-weight:600;color:var(--text-dim);text-decoration:none;transition:.15s}
+.cat:hover{color:var(--text)}
+.cat[aria-current="page"]{background:var(--text);color:var(--bg)}
+.cat small{font-size:12px;font-weight:500;opacity:.7}
+h1{margin:22px 0 8px;font-size:clamp(26px,4vw,36px);line-height:1.2;letter-spacing:-.01em}
+.lede{margin:0;max-width:760px;color:var(--text-dim);font-size:15px}
+.lede .warn{display:block;margin-top:6px;color:var(--risk);font-size:13px}
 .stats{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:22px}
 .stat{display:flex;flex-direction:column;gap:2px}
 .stat b{font-size:22px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
@@ -58,69 +69,65 @@ h1{margin:10px 0 8px;font-size:clamp(26px,4vw,36px);line-height:1.2;letter-spaci
 .card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;box-shadow:var(--shadow)}
 .card[hidden]{display:none}
 .card-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:10px}
-.card h2{margin:0;font-size:19px;line-height:1.25;letter-spacing:-.01em}
+.card h2{margin:0;font-size:19px;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere}
+.card h2 a{color:inherit;text-decoration:none}
+.card h2 a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
 .badges{display:flex;flex-wrap:wrap;gap:6px}
 .badge{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;line-height:1.5;color:var(--text-dim);background:var(--surface-2);white-space:nowrap}
-.badge-testnet{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}
+.badge-testnet,.badge-mid{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-border)}
 .badge-new{color:var(--new);background:var(--new-bg);border-color:var(--new-border)}
+.badge-low{color:var(--low);background:var(--low-bg);border-color:var(--low-border)}
+.badge-wait{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 dl{margin:0;display:flex;flex-direction:column;gap:9px;flex:1}
-.row{display:grid;grid-template-columns:76px 1fr;gap:10px;font-size:14px}
+.row{display:grid;grid-template-columns:var(--dt-w) 1fr;gap:10px;font-size:14px}
 .row dt{color:var(--text-dim);font-size:12px;padding-top:2px;white-space:nowrap}
-.row dd{margin:0;color:var(--text)}
+.row dd{margin:0;color:var(--text);overflow-wrap:anywhere}
 .row-risk dd{color:var(--risk)}
+.row-verdict dd{font-weight:600}
+.pending{flex:1;margin:0;padding:10px 12px;border-radius:10px;background:var(--surface-2);color:var(--text-dim);font-size:13px}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;padding-top:10px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums}
+.card-meta a{color:var(--text-dim)}
 .empty,.empty-initial{grid-column:1/-1;text-align:center;color:var(--text-dim);padding:60px 0}
 footer.site{border-top:1px solid var(--border);padding:24px 0 40px;font-size:13px;color:var(--text-dim)}
 footer.site p{margin:6px 0}
-@media (max-width:600px){.hero{padding:30px 0 20px}.grid{grid-template-columns:1fr;gap:12px}.row{grid-template-columns:1fr;gap:2px}.search{max-width:none;margin-left:0}}
+@media (max-width:600px){.hero{padding:22px 0 20px}.grid{grid-template-columns:1fr;gap:12px}.row{grid-template-columns:1fr;gap:2px}.search{max-width:none;margin-left:0}.cat{padding:6px 11px;font-size:13px}}
 </style>
 </head>
 <body>
 <header class="hero">
   <div class="wrap">
-    <div class="brand"><span class="dot"></span>SatLoot · 空投雷达</div>
-    <h1>正在进行的空投项目</h1>
-    <p class="lede">由 <a href="{{SOURCE_URL}}" rel="noopener">earn.satloot.com</a> 的空投雷达每日自动检索热门空投并存档:同一项目只出现一次,标注首次发现日期与上榜次数。字段取最近一次扫描的结论。</p>
-    <div class="stats">
-      <div class="stat"><b>{{TOTAL}}</b><span>项目总数</span></div>
-      <div class="stat"><b>{{NEW_COUNT}}</b><span>本次新发现</span></div>
-      <div class="stat"><b>{{TESTNET_COUNT}}</b><span>需测试网 BTC</span></div>
-      <div class="stat"><b>{{LATEST_SCAN}}</b><span>最近扫描(北京时间)</span></div>
-      <div class="stat"><b>{{NEXT_SCAN}}</b><span>下次扫描</span></div>
+    <div class="topline">
+      <div class="brand"><span class="dot"></span>{{BRAND}}</div>
+      {{NAV}}
     </div>
+    <h1>{{HERO_TITLE}}</h1>
+    <p class="lede">{{HERO_LEDE}}</p>
+    {{LANG_NOTE}}
+    <div class="stats">{{STATS}}</div>
   </div>
 </header>
 
 <main class="wrap">
   <div class="toolbar">
-    <div class="tabs" role="group" aria-label="筛选">
-      <button class="tab" type="button" data-filter="all" aria-pressed="true">全部<small>{{TOTAL}}</small></button>
-      <button class="tab" type="button" data-filter="new" aria-pressed="false">本次新发现<small>{{NEW_COUNT}}</small></button>
-      <button class="tab" type="button" data-filter="testnet" aria-pressed="false">测试网 BTC<small>{{TESTNET_COUNT}}</small></button>
-    </div>
-    <label class="sort">排序
-      <select id="sort">
-        <option value="first">最新发现</option>
-        <option value="last">最近出现</option>
-        <option value="count">上榜次数</option>
-        <option value="name">名称</option>
-      </select>
+    <div class="tabs" role="group" aria-label="{{T_FILTER}}">{{TABS}}</div>
+    <label class="sort">{{T_SORT}}
+      <select id="sort">{{SORT_OPTIONS}}</select>
     </label>
-    <div class="search"><input id="q" type="search" placeholder="搜索项目、链、参与方式…" autocomplete="off"></div>
+    <div class="search"><input id="q" type="search" placeholder="{{SEARCH_PLACEHOLDER}}" autocomplete="off"></div>
   </div>
 
   <section class="grid" id="grid">
 {{CARDS}}
-    <p class="empty" id="empty" hidden>没有匹配的项目</p>
+    <p class="empty" id="empty" hidden>{{T_EMPTY}}</p>
   </section>
 </main>
 
 <footer class="site">
   <div class="wrap">
-    <p>数据来源:<a href="{{SOURCE_URL}}" rel="noopener">earn.satloot.com 空投雷达</a>(AI 每日检索网页与社媒后整理)。本页每 10 分钟同步一次,本次生成于 <time datetime="{{GENERATED_ISO}}">{{GENERATED}}</time>(北京时间)。</p>
-    <p>只是信息汇总,不构成任何投资建议。空投任务常伴随钓鱼站与仿冒钱包,交互前请核对官方渠道,不要向任何页面输入助记词或私钥。</p>
-    <p>友情链接:<a href="https://satloot.com/" rel="noopener">satloot 项目总览</a> · <a href="https://sim.satloot.com/" rel="noopener">合约模拟器</a> · <a href="https://bnbbang.com/" rel="noopener">BNBBANG 镜像宇宙</a> · <a href="https://earn.satloot.com/" rel="noopener">riskdesk 风控面板</a> · <a href="https://game.satloot.com/" rel="noopener">satloot 游戏厅</a> · <a href="https://tool.satloot.com/" rel="noopener">satloot 工具站</a> · <a href="https://faucet.satloot.com/" rel="noopener">比特币测试网水龙头</a></p>
-    <p>机器可读:<a href="/data.json">data.json</a></p>
+    <p>{{FOOTER_NOTE}}</p>
+    <p class="friends">{{FRIENDS}}</p>
+    <p>{{FOOTER_SYNC}}</p>
   </div>
 </footer>
 
@@ -138,9 +145,7 @@ footer.site p{margin:6px 0}
     var text=(q.value||'').trim().toLowerCase();
     var shown=0;
     cards.forEach(function(c){
-      var ok=true;
-      if(filter==='new') ok=c.getAttribute('data-new')==='1';
-      else if(filter==='testnet') ok=c.getAttribute('data-testnet')==='1';
+      var ok=filter==='all'||c.getAttribute('data-'+filter)==='1';
       if(ok&&text) ok=(c.getAttribute('data-search')||'').indexOf(text)!==-1;
       c.hidden=!ok; if(ok) shown++;
     });
@@ -149,10 +154,8 @@ footer.site p{margin:6px 0}
   function resort(){
     var mode=sortSel.value;
     var sorted=cards.slice().sort(function(a,b){
-      if(mode==='name') return a.querySelector('h2').textContent.localeCompare(b.querySelector('h2').textContent,'zh');
-      if(mode==='count') return num(b,'count')-num(a,'count')||num(b,'last')-num(a,'last');
-      if(mode==='last') return num(b,'last')-num(a,'last')||num(b,'count')-num(a,'count');
-      return num(b,'first')-num(a,'first')||num(b,'count')-num(a,'count');
+      if(mode==='name') return a.querySelector('h2').textContent.localeCompare(b.querySelector('h2').textContent,document.documentElement.lang||'zh');
+      return num(b,mode)-num(a,mode)||num(b,'first')-num(a,'first');
     });
     sorted.forEach(function(c){grid.insertBefore(c,empty)});
   }
@@ -163,6 +166,8 @@ footer.site p{margin:6px 0}
   })});
   q.addEventListener('input',apply);
   sortSel.addEventListener('change',resort);
+  // language switch: remember the explicit choice so the zh landing page stops auto-redirecting
+  Array.prototype.forEach.call(document.querySelectorAll('.lang-switch'),function(a){a.addEventListener('click',function(){try{localStorage.setItem('lang',a.getAttribute('data-lang'))}catch(e){}})});
 })();
 </script>
 </body>

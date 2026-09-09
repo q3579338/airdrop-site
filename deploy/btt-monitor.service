@@ -1,0 +1,21 @@
+[Unit]
+Description=bitcointalk 山寨板新帖监控(Telegram/微信推送 + SQLite + grok 中文速览)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=riskdesk
+Group=riskdesk
+WorkingDirectory=/var/lib/btt-monitor
+EnvironmentFile=/etc/btt-monitor.env
+# grok 的登录态在 /opt/riskdesk/.grok(与 riskdesk 侧车共用同一账号)
+Environment=HOME=/opt/riskdesk
+Environment=TZ=Asia/Shanghai
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/airdrop-site/btt/btt_monitor.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

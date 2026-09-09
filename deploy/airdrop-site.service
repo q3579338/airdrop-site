@@ -1,5 +1,5 @@
 [Unit]
-Description=airdrop.satloot.com 静态页生成(从 riskdesk 侧车拉空投存档)
+Description=airdrop.satloot.com 静态页生成(空投存档 + BTT 新帖)
 After=network.target
 
 [Service]
@@ -8,5 +8,6 @@ User=www-data
 Group=www-data
 WorkingDirectory=/opt/airdrop-site
 Environment=AIRDROP_API_BASE=http://127.0.0.1:5177
+Environment=AIRDROP_BTT_JSON=/var/lib/btt-monitor/export.json
 Environment=AIRDROP_OUT_DIR=/var/www/airdrop-satloot
 ExecStart=/usr/bin/node /opt/airdrop-site/build.mjs
