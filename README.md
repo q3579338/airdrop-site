@@ -65,25 +65,29 @@ cd /d/CLAUDE/airdrop-site && tar czf - --exclude=dist --exclude=fixture --exclud
 
 空投接口在 earn.satloot.com 上有登录墙;生成器跑在服务器本机、不经 nginx 直连 127.0.0.1:5177,riskdesk 的 RISKDESK_AUTH_LOCAL_ADMIN=1 把这种请求当站主放行(只读三个 GET 接口)。
 
-## grok 配额用完时的 OpenAI 备用(`lib/ai_fallback.py`,2026-09-20)
+## grok 配额用完时的 Codex 备用(`lib/ai_fallback.py`,2026-09-20)
 
 grok 走 SuperGrok 周配额,用完后 CLI 退出码 1、正文里是 `API error (status 402 Payment Required): Grok Build usage balance exhausted`。
-用户定的规矩是**只给便宜的两条链路配备用,贵的那条直接暂停**:
+备用**不走 OpenAI API、不需要 API key**,而是用用户自己的 ChatGPT 订阅:服务器上装了 `@openai/codex`
+(`/opt/riskdesk-node/bin/codex`,以 riskdesk 用户、`HOME=/opt/riskdesk` 做过一次设备码登录,
+登录态在 `/opt/riskdesk/.codex/auth.json`),备用就是 spawn 一个 `codex exec`。
+用户定的规矩是**只给便宜的三条链路配备用,贵的那条直接暂停**:
 
 | 链路 | grok 耗尽时 | 联网 |
 | --- | --- | --- |
-| BTT 新帖速览 `btt/btt_monitor.py` | 切 OpenAI `gpt-5-nano` | 否(`BTT_OPENAI_WEB=1` 可开) |
-| 名人发币速览 `celeb/celeb_monitor.py` | 切 OpenAI `gpt-5-nano` | 否 |
-| 空投雷达 `riskdesk/server/airdrop.mjs` | 切 OpenAI `gpt-5-nano` + 内置 `web_search` | 是 |
-| **NFT 打新追踪 `nft/nft_monitor.py`** | **本轮直接跳过,不调 OpenAI** | — |
+| BTT 新帖速览 `btt/btt_monitor.py` | 切 codex `gpt-5.6-luna` | 否(`BTT_CODEX_WEB=1` 可开) |
+| 名人发币速览 `celeb/celeb_monitor.py` | 切 codex `gpt-5.6-luna` | 否 |
+| 空投雷达 `riskdesk/server/airdrop.mjs` | 切 codex `gpt-5.6-luna` + `-c tools.web_search=true` | 是 |
+| **NFT 打新追踪 `nft/nft_monitor.py`** | **本轮直接跳过,不调 codex** | — |
 
-- 模型:09-20 查证 `gpt-5-nano` 是 OpenAI 全线最便宜的一档($0.05 / $0.40 每百万 token,缓存输入 $0.005),且支持 Responses API 的内置 `web_search`。带搜索时成本大头是搜索本身($10 / 1000 次调用 = 每次 1 美分),模型档几乎不影响总价;嫌 nano 检索规划太糙就把 `OPENAI_WEB_MODEL` 设成 `gpt-5.6-luna`,不用改代码。
+- 模型与强度:订阅侧**没有** nano / mini,09-20 在服务器上实测可用的最小一档是 `gpt-5.6-luna`(还有个隐藏档 `gpt-reserve` 也能跑,想换设 `CODEX_MODEL`);`model_reasoning_effort` 只认 `low/medium/high/xhigh/max`,`minimal` 会直接退出码 1,所以默认 `low`(`CODEX_REASONING_EFFORT` 可改,认不出来会自动降回 `low` 重试一次)。
+- 命令行:`codex exec -C <每次新建的空目录> -s read-only --skip-git-repo-check --ephemeral -m <模型> -c model_reasoning_effort=low --json -o <文件> -`,提示词走 stdin(长文不受 argv 长度限制;codex 不接管 stdin 时会一直读到 EOF,写完必须关),正文取 `-o` 那个文件(联网时中途还会吐一条「我先去查一下」的 agent_message,不能当正文),用量从 `--json` 事件流的 `turn.completed.usage` 里取。联网只在空投发现那一路开:`codex exec` 没有 `--search`(那是顶层 flag),要写 `-c tools.web_search=true`。结构化输出走 `--output-schema`,模块会自动把 schema 补成 strict 模式(`required` 列全、`additionalProperties: false`)。
 - 切换规则:任一条链路的 grok 调用撞上 402(或连续 `AI_GROK_FAIL_STREAK` 次普通失败,默认 5),就往 `$HOME/.grok-exhausted` 写标记(服务器上四个服务的 HOME 都是 `/opt/riskdesk`,所以标记是**共享**的:NFT 先撞上,BTT / 空投雷达下一次就直接走备用,不用各撞一次)。
-- 恢复规则:标记超过 `AI_GROK_RETRY_MIN` 分钟(默认 60)就算过期,下一次调用会拿 grok 探一次路——成功即删标记,四条链路一起切回 grok(NFT 追踪自动恢复);还是 402 就把标记时间往后推一小时。也可以手动 `python3 lib/ai_fallback.py clear`。
-- 没配 `OPENAI_API_KEY`:备用不启用,四条链路的行为与加这套之前完全一致(只多一条日志,每个进程只提示一次)。
-- 费用:`$HOME/.ai-fallback-cost.json` 按北京时间自然日累计 calls / in / out / 搜索次数 / 估算美元;**不设硬上限**(用户的规矩:不自作主张限额),每次调用一条 `[ai] provider=openai model=… cost≈…` 日志,跨天时补一条前一天的日汇总。看现状:`python3 lib/ai_fallback.py status`。
-- 备用链路的提示词:BTT 不联网版会去掉"用 X 搜索核实"那段,免得模型没工具还硬编外部结论;名人发币版把 `--json-schema` 的字段要求直接写进提示词。两边的 `extract_json` 都加了 raw_decode 扫描,能从 ```` ```json ```` 代码块 + 前后废话里抠出对象。
-- 密钥:`/etc/btt-monitor.env`(BTT / 名人 / NFT 共用)与 `/etc/riskdesk.env`(空投雷达)里各有一行空的 `OPENAI_API_KEY=`,由用户自己填,填完 `systemctl restart btt-monitor celeb-monitor nft-monitor riskdesk`。
-- 本机自测:`python3 -c` 那套在 riskdesk 侧有 `server/ai-fallback.assert.mjs`(`npm run assert` 会跑);python 侧的切换逻辑与本模块同构,改了两边都要对一遍。
+- 恢复规则:标记超过 `AI_GROK_RETRY_MIN` 分钟(**09-20 用户拍板:60 → 240,即 4 小时**;周配额不可能一小时回血,白撞一次纯浪费)就算过期,下一次调用会拿 grok 探一次路——成功即删标记,四条链路一起切回 grok(NFT 追踪自动恢复);还是 402 就把标记时间往后推 4 小时。也可以手动 `python3 lib/ai_fallback.py clear`。
+- codex 没装 / 没登录(`$CODEX_HOME/auth.json` 不在)/ `CODEX_FALLBACK=0`:备用不启用,四条链路的行为与加这套之前完全一致(只多一条日志,每个进程只提示一次)。
+- 用量:订阅制没有按次美元,改记 token。`$HOME/.ai-fallback-usage.json` 按北京时间自然日累计 calls / in / cached / out / reasoning / 搜索次数;**不设硬上限**(用户的规矩:不自作主张限额),每次调用一条 `[ai] provider=codex model=… in=… out=…` 日志,跨天时补一条前一天的日汇总。看现状:`python3 lib/ai_fallback.py status`。
+- 备用链路用**另一份精简提示词**(codex 每次调用光它自己的系统提示词就上万 token,提示词能省一点是一点):BTT `build_fallback_prompt()` 只喂标题 + 正文前 1500 字(`BTT_FALLBACK_MAX_CHARS`)、去掉"用 X 搜索核实"那段;名人 `build_fallback_prompt()` 只喂人物/代号 + 前 6 条标题(`CELEB_FALLBACK_ARTICLES`)。输出格式交给 `--output-schema`(两边都把现成的 `ANALYSIS_SCHEMA` 传下去),不再写进提示词;模型万一不照办,两边的 `extract_json` 仍然能从 ```` ```json ```` 代码块 + 前后废话里抠出对象。
+- 配置:`/etc/btt-monitor.env`(BTT / 名人 / NFT 共用)与 `/etc/riskdesk.env`(空投雷达)里各有一行 `CODEX_BIN=/opt/riskdesk-node/bin/codex`——三个 python 服务与 riskdesk 的 PATH 里没有它,必须写全路径。**不需要任何 API key**;登录过期了就重跑一次 `sudo -u riskdesk env HOME=/opt/riskdesk /opt/riskdesk-node/bin/codex login --device-auth`。
+- 本机自测:riskdesk 侧 `server/ai-fallback.assert.mjs`(`npm run assert` 会跑,用一个假的 codex 可执行文件顶替真 CLI,62 项);python 侧的切换逻辑与它同构,改了两边都要对一遍。
 
-BTT 速览:每帖一次 grok-4.5 调用(`--json-schema` 结构化输出,关闭网页搜索),实测约 20 秒、0.01 美元;失败最多重试 3 次后标 failed。
+BTT 速览:每帖一次 grok-4.5 调用(`--json-schema` 结构化输出,关闭网页搜索),实测约 20 秒、0.01 美元;失败最多重试 3 次后标 failed。走 codex 备用时实测约 10 秒、约 1.3 万 token(其中一万多是 codex 自己的系统提示词,省不掉)。

@@ -39,7 +39,7 @@ except Exception:
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# grok 周配额耗尽时 NFT 追踪直接暂停,不走 OpenAI 备用(用户 09-20:联网核查每次约 5 万 token,
+# grok 周配额耗尽时 NFT 追踪直接暂停,不走 codex 备用(用户 09-20:联网核查每次约 5 万 token,
 # 备用只给 BTT 速览和空投雷达用)。这里只读共用标记 + 帮着把自己撞到的 402 记进去。
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "lib"))
 import ai_fallback  # noqa: E402
@@ -813,9 +813,9 @@ def track_project(conn, row):
         snap = merge_sticky(normalize_track(extract_obj(text, ["stage", "mint_price", "next_action"])), prev)
     except Exception as e:
         err = str(e)[:800]
-        # 402 / 连败写进共用标记:BTT 速览与空投雷达据此改走 OpenAI,本进程据此暂停
+        # 402 / 连败写进共用标记:BTT 速览与空投雷达据此改走 codex,本进程据此暂停
         if ai_fallback.note_grok_fail(e):
-            log("grok 配额耗尽,NFT 追踪暂停(不走 OpenAI 备用)")
+            log("grok 配额耗尽,NFT 追踪暂停(不走 codex 备用)")
             event(conn, "grok_exhausted", err[:300])
         streak = int(meta_get(conn, "fail_streak", 0) or 0) + 1
         meta_set(conn, "fail_streak", streak)
@@ -832,7 +832,7 @@ def track_project(conn, row):
             wechat_send("NFT 追踪异常", f"grok 核查已连续失败 {streak} 次,最新错误:{err[:300]}")
         return
     ts = now_ms()
-    ai_fallback.note_grok_ok()  # grok 又能用了:清共用标记,另外两条链路也一起切回来
+    ai_fallback.note_grok_ok()  # grok 又能用了:清共用标记,另外三条链路也一起切回来
     meta_set(conn, "fail_streak", 0)
     meta_set(conn, "last_error", None)
     meta_set(conn, "last_track_ts", ts)
@@ -1096,7 +1096,7 @@ def grok_paused(conn):
     if now_ms() - _paused_logged_at > 600_000:
         _paused_logged_at = now_ms()
         info = ai_fallback.exhausted_info() or {}
-        log(f"grok 耗尽,NFT 追踪暂停(自 {info.get('since', '?')},{info.get('retryAt', '?')} 后再试;不走 OpenAI 备用)")
+        log(f"grok 耗尽,NFT 追踪暂停(自 {info.get('since', '?')},{info.get('retryAt', '?')} 后再试;不走 codex 备用)")
     return True
 
 
@@ -1135,7 +1135,7 @@ def run_one_job(conn):
         except Exception as e:
             meta_set(conn, "next_discover_ts", now + 3600 * 1000)
             if ai_fallback.note_grok_fail(e):
-                log("grok 配额耗尽,NFT 追踪暂停(不走 OpenAI 备用)")
+                log("grok 配额耗尽,NFT 追踪暂停(不走 codex 备用)")
                 event(conn, "grok_exhausted", str(e)[:300])
             log(f"发现一轮失败: {str(e)[:300]}")
             event(conn, "discover_failed", str(e)[:300])

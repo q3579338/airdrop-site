@@ -45,7 +45,7 @@ except Exception:
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-# grok 周配额用完(402)时切 OpenAI 最便宜的一档接着跑;共用模块在仓库根 lib/
+# grok 周配额用完(402)时切 codex(ChatGPT 订阅)接着跑;共用模块在仓库根 lib/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import ai_fallback  # noqa: E402
 
@@ -431,12 +431,32 @@ def build_prompt(s, articles):
     )
 
 
-def build_openai_prompt(s, articles):
-    """备用链路没有 --json-schema,把输出格式直接写进提示词"""
-    fields = "、".join(ANALYSIS_KEYS)
-    return (build_prompt(s, articles)
-            + "\n最后只输出一个 JSON 对象(放在 ```json 代码块里),恰好包含这些字段:" + fields
-            + ";score 是 0 到 10 的整数,其余字段都是字符串。JSON 之外不要写别的。\n")
+FALLBACK_MAX_ARTICLES = int(os.environ.get("CELEB_FALLBACK_ARTICLES", "6"))
+FALLBACK_MAX_CHARS = int(os.environ.get("CELEB_FALLBACK_MAX_CHARS", "1500"))
+
+
+def build_fallback_prompt(s, articles):
+    """grok 耗尽时给 codex 用的精简版:只喂人物/代号 + 前 6 条标题(合计截到 1500 字)。
+
+    codex 每次调用光它自己的系统提示词就上万 token,新闻列表不必给满 12 条;
+    输出格式交给 --output-schema(ai_fallback 把 ANALYSIS_SCHEMA 传下去),不用再写进提示词。
+    """
+    lines = "\n".join(
+        ("- [%s] %s" % (a.get("source") or "?", a.get("title") or ""))
+        + (" —— %s" % a["summary"] if a.get("summary") else "")
+        for a in articles[:FALLBACK_MAX_ARTICLES]
+    )[:FALLBACK_MAX_CHARS]
+    return (
+        "你是加密空投猎手的助手。下面是一组新闻标题,讲某个名人/政客/网红计划或已经发行加密代币。"
+        "只根据给出的内容判断,没提到的写「未提及」,不要臆造。全部用简体中文,每字段一到两句话,不要 Markdown。\n"
+        "字段:person 人物英文原名;role 身份;token 代币名与代号;chain 链;launch_date 发行或计划日期;"
+        "status(传闻/本人确认/已上线/已辟谣 取其一);airdrop 空投规则;subscribe 现在该去订阅或注册什么"
+        "(没提到就按该人物常用渠道给最可能的一项并注明是推测);credibility 可信度与理由;"
+        "verdict 一句话结论(值不值得现在去订阅);score 0-10 整数(10 = 本人已确认且名单可提前进入)。\n\n"
+        + ("人物:%s;代号:%s\n" % (s.get("person") or "未识别", s.get("ticker") or "未识别"))
+        + (("名单里记录的常用订阅渠道(新闻没提就用它并注明来自名单):%s\n" % s["subscribe"]) if s.get("subscribe") else "")
+        + "\n新闻:\n" + lines + "\n"
+    )
 
 
 def extract_json(stdout):
@@ -465,7 +485,7 @@ def extract_json(stdout):
                 return inner
         except Exception:
             continue
-    # 逐个左花括号 raw_decode:OpenAI 备用链路没有 --json-schema,会在 JSON 前后说话
+    # 逐个左花括号 raw_decode:备用链路万一不照 --output-schema 办,会在 JSON 前后说话
     dec = json.JSONDecoder()
     found = None
     for m in re.finditer(r"\{", s):
@@ -539,10 +559,10 @@ def analysis_worker():
                 arts = [{"title": row["title"], "url": row["url"], "source": row["source"], "summary": row["summary"]}]
             else:
                 arts[0]["summary"] = row["summary"]
-            stdout, _usd, provider = ai_fallback.ai_call(
+            stdout, _tokens, provider = ai_fallback.ai_call(
                 lambda: run_grok(build_prompt(dict(row), arts)),
-                build_openai_prompt(dict(row), arts),
-                label="celeb-%s" % sid, web=False)
+                build_fallback_prompt(dict(row), arts),
+                label="celeb-%s" % sid, web=False, schema=ANALYSIS_SCHEMA)
             analysis = normalize_analysis(extract_json(stdout))
             conn.execute("UPDATE stories SET analysis_status='done', analysis_json=?, analysis_raw=?, analysis_ts=?, analysis_error=NULL WHERE id=?",
                          (json.dumps(analysis, ensure_ascii=False), stdout[-4000:], now_ms(), sid))

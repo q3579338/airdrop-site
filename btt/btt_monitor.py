@@ -31,7 +31,7 @@ try:
 except Exception:
     pass
 
-# grok 周配额用完(402)时切 OpenAI 最便宜的一档接着跑;共用模块在仓库根 lib/
+# grok 周配额用完(402)时切 codex(ChatGPT 订阅)接着跑;共用模块在仓库根 lib/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
 import ai_fallback  # noqa: E402
 
@@ -50,8 +50,9 @@ GROK_BIN = os.environ.get("BTT_GROK_BIN", "grok")
 GROK_MODEL = os.environ.get("BTT_GROK_MODEL", "grok-4.5")
 GROK_TIMEOUT_SEC = int(os.environ.get("BTT_GROK_TIMEOUT_SEC", "240"))
 GROK_PROXY = os.environ.get("BTT_GROK_PROXY", "").strip()  # 如 http://127.0.0.1:10809;空=直连
-# 备用链路(OpenAI)默认不联网:用户 09-20「BTT 速览不用联网」,且内置搜索 $0.01/次,速览量大不划算
-OPENAI_WEB = os.environ.get("BTT_OPENAI_WEB", "0") == "1"
+# 备用链路(codex)默认不联网:用户 09-20「BTT 速览不用联网」,联网一次 token 翻几倍,速览量大不划算
+# 备用(codex)这一路要不要联网:默认不开,速览只看帖子正文就够,联网一次翻几倍 token
+CODEX_WEB = os.environ.get("BTT_CODEX_WEB", "0") == "1"
 ANALYSIS_MAX_TRIES = 3
 POST_MAX_CHARS = 6000
 CST = timezone(timedelta(hours=8))
@@ -300,6 +301,31 @@ def build_prompt(title, author, posted_at, text, web=True):
     )
 
 
+FALLBACK_MAX_CHARS = int(os.environ.get("BTT_FALLBACK_MAX_CHARS", "1500"))
+
+
+def build_fallback_prompt(title, text, web=False):
+    """grok 耗尽时给 codex 用的精简版:只喂标题 + 正文前 1500 字,字段说明压到一行。
+
+    codex 每次调用光它自己的系统提示词就上万 token,提示词能省一点是一点;
+    输出格式交给 --output-schema(ai_fallback 把 ANALYSIS_SCHEMA 传下去),
+    所以这里连「放在 json 代码块里」都不用写。
+    """
+    body = (text or "")[:FALLBACK_MAX_CHARS]
+    head = ("你是加密项目尽调助手。下面是 bitcointalk 山寨板一个新帖的标题与正文节选(可能被截断)。"
+            + ("先读帖子,再用网页搜索核实官网/GitHub/交易所/骗局举报;"
+               if web else "你没有联网工具,只根据正文判断,不要臆造外部信息;"))
+    return (
+        head
+        + "帖子里没有的一律写「未提及」。全部用简体中文,每字段一到两句话,不要 Markdown。\n"
+        "字段:name 项目名;kind 类型(代币发行/ICO或预售/空投或Bounty/矿币或PoW/NFT/DeFi协议/工具或服务/"
+        "交易所或平台/其他/垃圾或广告 取其一);chain 链或平台;token 代币名与代号;distribution 募资或分发方式;"
+        "highlights 亮点;red_flags 风险信号;verdict 一句话结论;score 0-10 整数(10 最值得跟进);"
+        "mining 挖矿方式(CPU可挖/GPU可挖/ASIC/不可挖或非矿币/未提及 取其一,RandomX、yescrypt 等算 CPU可挖)。\n\n"
+        f"标题:{title}\n正文节选:\n{body}\n"
+    )
+
+
 def extract_json(stdout):
     """grok 输出可能是裸 JSON,也可能带外壳(--output-format json 的正文在 text 里);逐层尝试"""
     s = stdout.strip()
@@ -344,7 +370,7 @@ def extract_json(stdout):
                 return inner
         except Exception:
             continue
-    # 逐个左花括号 raw_decode:OpenAI 备用链路常在 ```json 代码块前后说话,取最后一个合规对象
+    # 逐个左花括号 raw_decode:备用链路万一不照 --output-schema 办,会在 ```json 代码块前后说话,取最后一个合规对象
     dec = json.JSONDecoder()
     found = None
     for m in re.finditer(r"\{", s):
@@ -448,10 +474,10 @@ def analysis_worker_loop():
             if not text:
                 author, posted_at, text = fetch_first_post(tid)
                 write_retry(conn, "UPDATE posts SET author=?, posted_at=?, post_text=? WHERE topic_id=?", (author, posted_at, text, tid))
-            stdout, _usd, provider = ai_fallback.ai_call(
+            stdout, _tokens, provider = ai_fallback.ai_call(
                 lambda: run_grok(build_prompt(row["title"], author, posted_at, text)),
-                build_prompt(row["title"], author, posted_at, text, web=OPENAI_WEB),
-                label="btt-%s" % tid, web=OPENAI_WEB)
+                build_fallback_prompt(row["title"], text, web=CODEX_WEB),
+                label="btt-%s" % tid, web=CODEX_WEB, schema=ANALYSIS_SCHEMA)
             analysis = normalize_analysis(extract_json(stdout))
             write_retry(conn,
                 "UPDATE posts SET analysis_status='done', analysis_json=?, analysis_raw=?, analysis_ts=?, analysis_error=NULL WHERE topic_id=?",
