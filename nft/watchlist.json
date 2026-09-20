@@ -1,0 +1,101 @@
+{
+ "_readme": "NFT 打新追踪名单。handle = 项目官方 X 账号(不带 @);其余字段是人工录入的初始资料,grok 每次核查以最新推文为准并覆盖展示。notes = KOL 观点,原样标注出处,不构成推荐。改完部署即可,监控进程发现文件变化会自动同步。",
+ "projects": [
+  {
+   "handle": "arcbang_xyz",
+   "name": "ARCBANG",
+   "tags": ["站长项目", "免费铸造"],
+   "chain": "Arc(Circle 的 L1,gas 用 USDC)",
+   "site": "https://arcbang.xyz",
+   "links": { "site": "https://arcbang.xyz", "wl_apply": "https://arcbang.xyz/quest.html", "wl_checker": "https://arcbang.xyz/check.html", "explorer": "https://explorer.arc.io/address/0x88d6eb4d62634fcb02ecb566c3018c61f6e5fa57", "docs": "https://github.com/q3579338/arcbang" },
+   "supply": "1,387 枚,永不增发",
+   "mint_price": "887 枚免费(白名单保底 387 + 先到先得 500);500 枚付费,价格另行公布",
+   "mechanism": "免费引爆任意 Arc 区块哈希生成一个宇宙,喜欢再铸造;只卖 NFT,不发币",
+   "wl_how": "arcbang.xyz/quest.html 做白名单任务,arcbang.xyz/check.html 查资格",
+   "extra": "预热 2026-09-20 起 14 天;白名单铸造 2026-10-04 08:00(UTC+8),先到先得 10-05 08:00,公售 10-06 08:00",
+   "notes": [
+    { "by": "站长", "date": "2026-09-20", "text": "本站站长自己的项目(自营,不是第三方收录),已在 airdrop.satloot.com 各页顶部置顶;合约 0x88d6eb4d62634fcb02ecb566c3018c61f6e5fa57,开源仓库 github.com/q3579338/arcbang", "url": "https://arcbang.xyz" }
+   ]
+  },
+  {
+   "handle": "akadotfun",
+   "name": "AKA (aka.fun)",
+   "tags": ["金标", "Arc 发射台"],
+   "chain": "Arc",
+   "site": "https://aka.fun/",
+   "links": { "site": "https://aka.fun/", "wl_checker": "https://aka.fun/mint-check", "telegram": "https://t.me/akadotfun" },
+   "supply": "KOL 称总量 4444、给散户 2222;官网 mint-check 显示开放铸造 2,222 份",
+   "mechanism": "DN404(NFT 与 ERC-20 双形态);白名单分 GTD 与 FCFS;持有 NFT 分平台交易手续费",
+   "wl_how": "官网 aka.fun/mint-check 查询钱包是否在名单",
+   "extra": "aka.fun 主网 9 月 16 日上线(官网倒计时)",
+   "notes": [
+    { "by": "@Ron521520", "date": "2026-09-15", "text": "金标项目,Arc 生态发射台,持 NFT 分手续费;总量 4444,给散户的只有 2222,GTD 白名单很难拿" }
+   ]
+  },
+  {
+   "handle": "standard_rsv",
+   "name": "The Standard Reserve",
+   "tags": ["创世 Charter"],
+   "chain": "Robinhood Chain(据媒体报道)",
+   "site": "https://www.standardreserve.xyz/",
+   "links": { "site": "https://www.standardreserve.xyz/", "docs": "https://www.standardreserve.xyz/whitepaper/" },
+   "supply": "创世 Charter 1000 个,灵魂绑定不可转让",
+   "mint_price": "白名单免费领(据报道需付 0.15 ETH 流动性费);余量公开荷兰拍 1.25 ETH 起、0.15 ETH 地板",
+   "mechanism": "白名单领创世 Charter(相当于银行执照,每张带分行、按 ETH 净流入分 $STANDARD 增发);之后新 Charter 每日 ETH 荷兰拍",
+   "notes": [
+    { "by": "@Ron521520", "date": "2026-09-15", "text": "最卷的一个:NFT 总量 1000,目前只有 350 个地址有资格,还剩 650 个可以去争取;白皮书里 NFT 机制作用很大" },
+    { "by": "@FokLouis144", "date": "2026-09-15", "text": "拿到 standard_rsv 白名单的要赚一万八千刀了,拿白难度顶级" }
+   ]
+  },
+  {
+   "handle": "ArclingsNFT",
+   "name": "Arclings",
+   "tags": ["金标", "Arc 身份藏品"],
+   "chain": "Arc",
+   "site": "https://arclings.art/",
+   "links": { "site": "https://arclings.art/", "discord": "https://discord.gg/w7QCGz6jge" },
+   "supply": "6,283(官网;全链上 1-bit SVG,CC0)",
+   "mechanism": "白名单申请制,申请不保证名额",
+   "wl_how": "官网连接 X 并填 EVM 地址,点赞转发并 @ 3 位好友,加入官方 Discord",
+   "notes": [
+    { "by": "@Ron521520", "date": "2026-09-15", "text": "金标项目,Arc 链上身份藏品;很多 KOL 在抽白名单,在 Arc 生态里关注度靠前" }
+   ]
+  },
+  {
+   "handle": "Kokomojinft",
+   "name": "KOKOMOJI",
+   "tags": ["抽奖铸造"],
+   "chain": "Ethereum",
+   "site": "https://kokomoji.art/",
+   "links": { "site": "https://kokomoji.art/", "mint": "https://kokomoji.art/" },
+   "creator": "@iamnick44",
+   "supply": "3,333(社区保留 233)",
+   "mint_price": "0.033 ETH(官网抽奖页;09-13 推文疑似改价,待核查)",
+   "per_wallet": "5",
+   "mechanism": "抽奖:每份入场押 0.033 ETH,24 小时窗口,Chainlink VRF 逐份独立开奖,未中签全额退款",
+   "notes": [
+    { "by": "@Ron521520", "date": "2026-09-15", "text": "@iamnick44 创作,像素风机械 + 机器人脸 + 颜文字,总量 3333;创始人上个 NFT 表现不错,这次用抽奖比较公平,0.033 ETH、单钱包 5 个" }
+   ]
+  },
+  {
+   "handle": "zksnarks_",
+   "name": "zkSNARKs",
+   "tags": ["Zcash 热门"],
+   "chain": "Zcash",
+   "supply": "10,000(KOL 说法)",
+   "mechanism": "Snarklist 白名单 + 公开铸造;据 AI 发现线索为盲拍、按最低中标价统一结算(ZEC)",
+   "extra": "KOL 称北京时间 09-16 凌晨 00:00 铸造(时区待官方核实)",
+   "notes": [
+    { "by": "@FokLouis144", "date": "2026-09-15", "text": "今晚凌晨 00:00 mint;昨天看到 WL 有 1200U 成交;总量 10000,没白的也有机会跟,是目前 Z 链热度最高的系列" }
+   ]
+  },
+  {
+   "handle": "RareFriendsNFT",
+   "name": "Rare Friends",
+   "tags": ["白名单高溢价"],
+   "notes": [
+    { "by": "@FokLouis144", "date": "2026-09-15", "text": "今天 RareFriendsNFT 的白名单白捡 2000 刀,但拿白难度顶级" }
+   ]
+  }
+ ]
+}

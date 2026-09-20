@@ -1,0 +1,35 @@
+{
+ "_readme": "站长自营项目的置顶卡,显示在四个页面主内容的最顶部(筛选栏之前)。可以放多条,按 order 升序排;until(北京时间日期,含当天)一过就自动不显示,不用回来删。这些是本站站长自己的项目,卡片上必须带「站长项目」徽章,不要伪装成第三方收录。xxxEn 字段给英文页用。phases[].at 是带时区的 ISO 时间,生成时按当前时刻自动高亮当前阶段并算出「距下一阶段还有几天」。",
+ "items": [
+  {
+   "id": "arcbang",
+   "order": 1,
+   "until": "2026-10-07",
+   "name": "ARCBANG",
+   "badge": "站长项目",
+   "badgeEn": "Our project",
+   "tagline": "每个 Arc 区块哈希,都是一个宇宙",
+   "taglineEn": "Every Arc block hash is a universe",
+   "blurb": "Arc 主网(Circle 的 L1,gas 用 USDC)上的宇宙 NFT:免费引爆任意区块,喜欢再铸造。1,387 枚永不增发,887 枚免费(白名单保底 387 + 先到先得 500),500 枚付费,价格另行公布。不发币。",
+   "blurbEn": "A universe NFT on Arc mainnet (Circle's L1, where gas is paid in USDC): detonate any block for free, then mint only the ones you like. 1,387 pieces and never more — 887 free (387 guaranteed for the whitelist plus 500 first come, first served) and 500 paid at a price to be announced. No token.",
+   "tags": ["免费铸造", "白名单", "Arc"],
+   "tagsEn": ["Free mint", "Whitelist", "Arc"],
+   "image": "https://arcbang.xyz/assets/og/home-arc.png",
+   "imageAlt": "ARCBANG",
+   "phases": [
+    { "at": "2026-09-20T00:00:00+08:00", "label": "预热", "labelEn": "Teaser", "note": "14 天", "noteEn": "14 days" },
+    { "at": "2026-10-04T08:00:00+08:00", "label": "白名单铸造", "labelEn": "Whitelist mint" },
+    { "at": "2026-10-05T08:00:00+08:00", "label": "先到先得", "labelEn": "First come, first served" },
+    { "at": "2026-10-06T08:00:00+08:00", "label": "公售", "labelEn": "Public sale" }
+   ],
+   "links": [
+    { "url": "https://arcbang.xyz/quest.html", "label": "去做白名单任务", "labelEn": "Do the whitelist quests", "primary": true },
+    { "url": "https://arcbang.xyz/check.html", "label": "查资格", "labelEn": "Check eligibility", "primary": true },
+    { "url": "https://arcbang.xyz", "label": "网站", "labelEn": "Website" },
+    { "url": "https://x.com/arcbang_xyz", "label": "X", "labelEn": "X" },
+    { "url": "https://explorer.arc.io/address/0x88d6eb4d62634fcb02ecb566c3018c61f6e5fa57", "label": "合约浏览器", "labelEn": "Explorer" },
+    { "url": "https://github.com/q3579338/arcbang", "label": "GitHub", "labelEn": "GitHub" }
+   ]
+  }
+ ]
+}

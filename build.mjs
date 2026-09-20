@@ -3,7 +3,8 @@
 //   /          空投项目(zh-CN)—— riskdesk 侧车(127.0.0.1:5177,本机直连即站主)的空投雷达存档
 //   /btt/      BTT 新帖(zh-CN)—— btt/btt_monitor.py 导出的 export.json(bitcointalk 山寨板新帖 + grok 中文速览)
 //   /celeb/    名人发币(zh-CN)—— celeb/celeb_monitor.py 导出的 export.json(名人/政客发币新闻事件 + grok 中文速览 + 去哪订阅)
-//   /en/  /en/btt/  /en/celeb/  同一模板按 LOCALES.en 渲染的英文壳;项目描述数据本身是中文来源,英文页原样保留
+//   /nft/      NFT 打新机会(zh-CN)—— nft/nft_monitor.py 导出的 export.json(名单项目 + AI 在 X 上发现的项目,grok 联网核查阶段/铸造时间/价格)
+//   /en/  /en/btt/  /en/celeb/  /en/nft/  同一模板按 LOCALES.en 渲染的英文壳;项目描述数据本身是中文来源,英文页原样保留
 // 由 systemd 定时器每 5 分钟跑一次;任一数据源挂了就保留上一版文件,不会把站点写空。
 //
 // 环境变量:
@@ -11,7 +12,8 @@
 //   AIRDROP_BTT_JSON     BTT 导出文件,默认 /var/lib/btt-monitor/export.json(不存在则 BTT 页显示未启动)
 //   AIRDROP_CELEB_JSON   名人发币导出文件,默认 /var/lib/celeb-monitor/export.json(不存在则该页显示未启动)
 //   AIRDROP_OUT_DIR      输出目录,默认 ./dist
-//   AIRDROP_FIXTURE_DIR  本地测试:从该目录读 projects.json / status.json / reports.json / btt-export.json / celeb-export.json,不联网
+//   AIRDROP_FIXTURE_DIR  本地测试:从该目录读 projects.json / status.json / reports.json / btt-export.json / celeb-export.json / nft-export.json,不联网
+//   AIRDROP_NFT_JSON     NFT 追踪导出文件,默认 /var/lib/nft-monitor/export.json(不存在则该页显示未启动)
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +22,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API_BASE = (process.env.AIRDROP_API_BASE || 'http://127.0.0.1:5177').replace(/\/$/, '');
 const BTT_JSON = process.env.AIRDROP_BTT_JSON || '/var/lib/btt-monitor/export.json';
 const CELEB_JSON = process.env.AIRDROP_CELEB_JSON || '/var/lib/celeb-monitor/export.json';
+const NFT_JSON = process.env.AIRDROP_NFT_JSON || '/var/lib/nft-monitor/export.json';
+const PINNED_PATH = path.join(__dirname, 'pinned.json'); // 置顶卡(站长自营项目),随代码部署
+const PARTICIPATION_PATH = path.join(__dirname, 'participation.json'); // 右侧参与表(网站管理员自用),随代码部署
 const OUT_DIR = process.env.AIRDROP_OUT_DIR || path.join(__dirname, 'dist');
 const FIXTURE_DIR = process.env.AIRDROP_FIXTURE_DIR || null;
 const SITE_URL = 'https://airdrop.satloot.com/';
@@ -58,6 +63,7 @@ async function loadExport(label, fixtureName, file) {
 }
 const loadBtt = () => loadExport('BTT', 'btt-export.json', BTT_JSON);
 const loadCeleb = () => loadExport('celeb', 'celeb-export.json', CELEB_JSON);
+const loadNft = () => loadExport('nft', 'nft-export.json', NFT_JSON);
 
 // ---------- 语言表 ----------
 // 页面"壳"的全部文案都在这里;空投/BTT 的描述字段是中文来源、无法机器翻译,英文页只翻标签与枚举值。
@@ -78,6 +84,11 @@ const BTT_MINING_EN = {
 };
 // 名人发币速览的 status 枚举(见 celeb/celeb_monitor.py)
 const CELEB_STATUS_EN = { '传闻': 'Rumor', '本人确认': 'Confirmed', '已上线': 'Live', '已辟谣': 'Denied' };
+// NFT 核查的 stage 枚举(见 nft/nft_monitor.py STAGES)
+const NFT_STAGE_EN = {
+  '预热': 'Teaser', '白名单申请中': 'Whitelist open', '白名单已截止': 'Whitelist closed', '铸造中': 'Minting now',
+  '已售罄': 'Sold out', '已上市': 'Trading', '延期或取消': 'Delayed / cancelled', '未知': 'Unknown',
+};
 
 const LOCALES = {
   zh: {
@@ -85,7 +96,7 @@ const LOCALES = {
     switchLabel: 'EN', switchLang: 'en',
     brand: 'SatLoot · 空投雷达',
     siteName: 'SatLoot 空投雷达',
-    navLabel: '大类', navAirdrop: '空投项目', navBtt: 'BTT 新帖', navCeleb: '名人发币',
+    navLabel: '大类', navAirdrop: '空投项目', navBtt: 'BTT 新帖', navCeleb: '名人发币', navNft: 'NFT 打新',
     filterLabel: '筛选', sortLabel: '排序', empty: '没有匹配的条目',
     tz: '北京时间',
     date: (o) => `${o.year}-${o.month}-${o.day}`,
@@ -96,18 +107,37 @@ const LOCALES = {
     enumKind: (v) => v,
     enumMining: (v) => v,
     enumStatus: (v) => v,
+    enumStage: (v) => v,
+    cal: {
+      title: '铸造日历', panelTitle: '近期铸造', today: '今天', tomorrow: '明天',
+      inDays: (n) => `${n} 天后`, count: (n) => `${n} 个`, tba: '待定',
+      applied: '已申请', none: '暂时没有已定日期的铸造。', undated: (n) => `另有 ${n} 个项目还没公布铸造日期。`,
+      more: (n) => `日历里还有 ${n} 个 →`,
+    },
+    side: {
+      title: '参与表', note: '网站管理员自用:记录站长自己参与了哪些项目、做到哪一步。不是推荐,也不代表项目方背书。', empty: '暂无参与记录。',
+      rowAction: '动作', rowStatus: '状态', rowProgress: '项目进度', rowNext: '下一步', rowDate: '日期', mint: '铸造', track: '看追踪卡片 →',
+      sections: { nft: 'NFT', airdrop: '空投', btt: 'BTT', celeb: '名人币' },
+    },
+    pin: {
+      label: '站长自营项目', badge: '站长项目',
+      note: '这是本站站长自己做的项目,置顶是自荐,不是第三方收录,也不构成投资建议。',
+      tzNote: '时间为北京时间(UTC+8)',
+      until: (name, ms) => { const h = Math.max(1, Math.round(ms / 3600_000)); return h <= 48 ? `距${name}还有 ${h} 小时` : `距${name}还有 ${Math.round(h / 24)} 天`; },
+      ongoing: (name) => `${name}进行中`,
+    },
     airdrop: {
       title: '空投雷达 · SatLoot Airdrop',
       description: (n, scan) => `${n} 个正在进行的加密空投项目:链、参与方式、阶段、热度证据与风险,按项目去重并标注首次发现日期与上榜次数。最近扫描 ${scan}(北京时间)。`,
       heroTitle: '正在进行的空投项目',
-      heroLede: (src) => `由 <a href="${src}" rel="noopener">earn.satloot.com</a> 的空投雷达每日自动检索热门空投并存档:同一项目只出现一次,标注首次发现日期与上榜次数。字段取最近一次扫描的结论。`,
+      heroLede: (src) => `由 <a href="${src}" rel="noopener">earn.satloot.com</a> 的空投雷达每 6 小时自动检索一轮热门空投并存档:同一项目只出现一次,标注首次发现日期与上榜次数。字段取最近一次扫描的结论。`,
       langNote: '',
       statTotal: '项目总数', statNew: '本次新发现', statTestnet: '需测试网 BTC', statLastScan: '最近扫描(北京时间)', statNextScan: '下次扫描',
       tabAll: '全部', tabNew: '本次新发现', tabTestnet: '测试网 BTC',
       sortFirst: '最新发现', sortLast: '最近出现', sortCount: '上榜次数', sortName: '名称',
       searchPlaceholder: '搜索项目、链、参与方式…',
       emptyInitial: '雷达还没有产出任何项目,稍后再来。',
-      footerNote: (src) => `数据来源:<a href="${src}" rel="noopener">earn.satloot.com 空投雷达</a>(AI 每日检索网页与社媒后整理)。机器可读:<a href="/data.json">data.json</a>。`,
+      footerNote: (src) => `数据来源:<a href="${src}" rel="noopener">earn.satloot.com 空投雷达</a>(AI 每 6 小时检索网页与社媒后整理)。机器可读:<a href="/data.json">data.json</a>。`,
       badgeTestnet: '测试网 BTC', badgeNew: '本次新发现', badgeSeen: (n) => `第 ${n} 次上榜`,
       rowChain: '链', rowParticipation: '参与方式', rowTestnet: '测试网', rowDeadline: '阶段 / 截止', rowBuzz: '热度证据', rowRisk: '风险',
       metaFirstTitle: '第一次被雷达扫到的日期', metaFirst: '首次发现', metaLast: '最近出现', metaSeen: (n) => `上榜 ${n} 次`,
@@ -155,13 +185,39 @@ const LOCALES = {
       pendingFailed: 'AI 速览多次失败,请直接看报道。', pendingSkipped: '这条没有生成速览。', pendingWait: 'AI 正在读报道生成中文速览,几分钟后刷新。',
       metaFirst: '首见', metaLast: '最近', metaSource: '来源', moreArticles: (n) => `其余 ${n} 篇报道`,
     },
+    nft: {
+      title: 'NFT 打新机会 · SatLoot Airdrop',
+      description: (total, wl, soon, check) => `NFT 白名单与铸造机会追踪:${total} 个项目,${wl} 个白名单开放中,${soon} 个 7 天内铸造。AI 定时用 X 搜索核查阶段、铸造时间、价格与总量,有变动即推送,铸造前 24 小时与 1 小时提醒。最近核查 ${check}(北京时间)。`,
+      descriptionOffline: 'NFT 白名单与铸造机会追踪:AI 定时用 X 搜索核查阶段、铸造时间、价格与总量,有变动即推送,并在 X 上发现新的打新机会。',
+      heroTitle: 'NFT 打新机会',
+      heroLede: (t, dh) => `重点是把机会先找出来,核查按状态分档、不反复折腾:已申请的项目在铸造前后每 ${t.nearApplied} 小时核查一次,名单项目 ${t.near} 小时,已定铸造日期每 ${t.dated} 小时,白名单开放中每 ${t.wl} 小时,暂无日程每 ${t.quiet} 小时(AI 发现的项目频率减半)。阶段、铸造时间、铸造价、总量、单钱包上限一变就推送,铸造前 24 小时和 1 小时各提醒一次。${dh ? `另外每 ${dh} 小时让 AI 在 X 上找一批新的白名单 / mint 机会,标为「AI 发现」,不限数量。` : ''}KOL 观点原样标注出处,不构成推荐。<span class="warn">AI 检索可能看错,铸造前务必到项目官方 X 核对合约与铸造链接,不点私信和评论区里的链接。</span>`,
+      health: (n, err) => `核查连续失败 ${n} 次,最新错误:${err}`,
+      langNote: '',
+      statTotal: '追踪项目', statWl: '白名单开放中', statSoon: '7 天内铸造', statChanged: '24 小时内有变动', statLastCheck: '最近核查(北京时间)',
+      tabAll: '全部', tabToday: '今日铸造', tabCurated: '名单项目', tabWl: '白名单开放', tabSoon: '即将铸造', tabChanged: '最近变动', tabDiscovered: 'AI 发现',
+      sortSoon: '铸造时间', sortChanged: '最近变动', sortScore: '评分', sortFirst: '最新收录', sortName: '名称',
+      searchPlaceholder: '搜索项目、链、GTD、抽奖、Arc…',
+      emptyOffline: 'NFT 追踪尚未启动或还没有导出数据,稍后再来。',
+      emptyNoRows: '追踪已启动,名单还是空的。',
+      footerNote: () => `数据来源:项目官方 X、官网与 KOL 推文,由 AI(grok)联网检索整理;名单项目的初始资料与 KOL 观点为人工录入。机器可读:<a href="/nft/data.json">nft/data.json</a>。`,
+      badgeDiscovered: 'AI 发现', badgeChanged: '24h 内有变动', badgeScore: (s) => `评分 ${s}/10`, badgeWait: '首次核查中', badgeFailed: '核查失败', badgeStale: '最近一次核查失败',
+      countdown: (ms) => { const h = ms / 3600_000; return h < 48 ? `${Math.max(1, Math.round(h))} 小时后铸造` : `${Math.round(h / 24)} 天后铸造`; },
+      rowChain: '链', rowCreator: '创作者', rowSupply: '总量', rowPrice: '铸造价', rowPerWallet: '单钱包', rowMechanism: '机制', rowMintTime: '铸造时间',
+      rowWl: '拿白名单', rowWlDeadline: '白名单截止', rowLatest: '最新动态', rowWhy: '发现理由', rowNext: '现在该做', rowRisk: '风险', rowVerdict: '结论', rowExtra: '备注',
+      notesLabel: 'KOL 观点', rowContract: '合约', linksLabel: '关键链接',
+      linkLabels: { x: 'X', site: '官网', mint: '铸造页', wl_apply: '白名单申请', wl_checker: '名单查询', discord: 'Discord', telegram: 'Telegram', docs: '文档 / 白皮书', market: '二级市场', explorer: '合约浏览器', source: '发现来源推文', kol: 'KOL 推文' },
+      pendingWait: 'AI 正在用 X 搜索核查这个项目,几分钟后刷新。', pendingFailed: 'AI 核查多次失败,先看项目官方 X。',
+      fields: { stage: '阶段', mint_time_utc: '铸造时间', mint_price: '铸造价', supply: '总量', per_wallet: '单钱包' },
+      moreChanges: (n) => `变动记录 ${n} 条`, moreSources: (n) => `参考来源 ${n} 个`,
+      metaFirst: '收录', metaChecked: '核查', metaNext: '下次', metaSite: '官网',
+    },
   },
   en: {
     code: 'en', htmlLang: 'en', ogLocale: 'en_US', ogLocaleAlt: 'zh_CN', dir: 'en/',
     switchLabel: '中文', switchLang: 'zh',
     brand: 'SatLoot · Airdrop Radar',
     siteName: 'SatLoot Airdrop Radar',
-    navLabel: 'Sections', navAirdrop: 'Airdrops', navBtt: 'BTT threads', navCeleb: 'Celebrity coins',
+    navLabel: 'Sections', navAirdrop: 'Airdrops', navBtt: 'BTT threads', navCeleb: 'Celebrity coins', navNft: 'NFT mints',
     filterLabel: 'Filter', sortLabel: 'Sort', empty: 'Nothing matches',
     tz: 'UTC+8',
     date: (o) => `${MON_EN[Number(o.month) - 1]} ${Number(o.day)}, ${o.year}`,
@@ -172,18 +228,37 @@ const LOCALES = {
     enumKind: (v) => BTT_KIND_EN[v] ?? v,
     enumMining: (v) => BTT_MINING_EN[v] ?? v,
     enumStatus: (v) => CELEB_STATUS_EN[v] ?? v,
+    enumStage: (v) => NFT_STAGE_EN[v] ?? v,
+    cal: {
+      title: 'Mint calendar', panelTitle: 'Upcoming mints', today: 'today', tomorrow: 'tomorrow',
+      inDays: (n) => `in ${n} days`, count: (n) => `${n}`, tba: 'TBA',
+      applied: 'Applied', none: 'No mints with a confirmed date yet.', undated: (n) => `${n} more projects have no mint date yet.`,
+      more: (n) => `${n} more in the calendar →`,
+    },
+    side: {
+      title: 'Participation log', note: "For the site admin's own use: which projects the admin has joined and how far along. Not a recommendation or an endorsement.", empty: 'No entries yet.',
+      rowAction: 'Action', rowStatus: 'Status', rowProgress: 'Project', rowNext: 'Next', rowDate: 'Date', mint: 'Mint', track: 'Open tracker card →',
+      sections: { nft: 'NFT', airdrop: 'Airdrop', btt: 'BTT', celeb: 'Celeb coin' },
+    },
+    pin: {
+      label: 'Our own project', badge: 'Our project',
+      note: 'This project is built by the site admin: it is pinned here as our own promotion, not a third-party listing, and it is not investment advice.',
+      tzNote: 'All times UTC+8',
+      until: (name, ms) => { const h = Math.max(1, Math.round(ms / 3600_000)); return h <= 48 ? `${name} in ${h}h` : `${name} in ${Math.round(h / 24)} days`; },
+      ongoing: (name) => `${name} is live`,
+    },
     airdrop: {
       title: 'Airdrop Radar · SatLoot Airdrop',
       description: (n, scan) => `${n} ongoing crypto airdrops: chain, how to join, stage, buzz and risks, deduplicated by project with first-seen dates. Last scan ${scan} (UTC+8).`,
       heroTitle: 'Ongoing airdrop projects',
-      heroLede: (src) => `The airdrop radar at <a href="${src}" rel="noopener">earn.satloot.com</a> searches for trending airdrops every day and archives them: each project appears once, tagged with its first-seen date and how many times it has been listed. Fields reflect the latest scan.`,
+      heroLede: (src) => `The airdrop radar at <a href="${src}" rel="noopener">earn.satloot.com</a> searches for trending airdrops every 6 hours and archives them: each project appears once, tagged with its first-seen date and how many times it has been listed. Fields reflect the latest scan.`,
       langNote: 'Project descriptions are shown as archived (Chinese).',
       statTotal: 'Projects', statNew: 'New this scan', statTestnet: 'Need testnet BTC', statLastScan: 'Last scan (UTC+8)', statNextScan: 'Next scan',
       tabAll: 'All', tabNew: 'New this scan', tabTestnet: 'Testnet BTC',
       sortFirst: 'Newest found', sortLast: 'Last seen', sortCount: 'Times listed', sortName: 'Name',
       searchPlaceholder: 'Search project, chain, how to join…',
       emptyInitial: 'The radar has not produced any projects yet. Check back later.',
-      footerNote: (src) => `Source: <a href="${src}" rel="noopener">earn.satloot.com airdrop radar</a> (an AI searches the web and social media daily and compiles the results). Machine-readable: <a href="/data.json">data.json</a>.`,
+      footerNote: (src) => `Source: <a href="${src}" rel="noopener">earn.satloot.com airdrop radar</a> (an AI searches the web and social media every 6 hours and compiles the results). Machine-readable: <a href="/data.json">data.json</a>.`,
       badgeTestnet: 'Testnet BTC', badgeNew: 'New this scan', badgeSeen: (n) => `Listed ${n}×`,
       rowChain: 'Chain', rowParticipation: 'How to join', rowTestnet: 'Testnet', rowDeadline: 'Stage / deadline', rowBuzz: 'Buzz', rowRisk: 'Risk',
       metaFirstTitle: 'Date the radar first picked it up', metaFirst: 'First seen', metaLast: 'Last seen', metaSeen: (n) => `Listed ${n}×`,
@@ -230,6 +305,32 @@ const LOCALES = {
       rowSubscribeHint: 'Subscribe hint',
       pendingFailed: 'The AI digest failed repeatedly; read the reports directly.', pendingSkipped: 'No digest was generated for this event.', pendingWait: 'The AI is reading the reports and writing a Chinese digest; refresh in a few minutes.',
       metaFirst: 'First seen', metaLast: 'Latest', metaSource: 'Source', moreArticles: (n) => `${n} more reports`,
+    },
+    nft: {
+      title: 'NFT Mint Tracker · SatLoot Airdrop',
+      description: (total, wl, soon, check) => `NFT whitelist and mint tracker: ${total} projects, ${wl} with an open whitelist, ${soon} minting within 7 days. An AI re-checks stage, mint time, price and supply on X; changes are pushed, with reminders 24 hours and 1 hour before mint. Last check ${check} (UTC+8).`,
+      descriptionOffline: 'NFT whitelist and mint tracker: an AI re-checks stage, mint time, price and supply on X, pushes changes, and finds new mint opportunities.',
+      heroTitle: 'NFT mint tracker',
+      heroLede: (t, dh) => `Finding opportunities comes first; re-checks are paced by state rather than repeated constantly: projects the admin has applied to are re-checked every ${t.nearApplied} hours around mint time, watchlist projects every ${t.near} hours, every ${t.dated} hours once a mint date is set, every ${t.wl} hours while the whitelist is open, and every ${t.quiet} hours when nothing is scheduled (AI-found projects at half that rate). Any change to stage, mint time, mint price, supply or per-wallet cap is pushed, and reminders go out 24 hours and 1 hour before mint.${dh ? ` Every ${dh} hours the AI also searches X for new whitelist / mint opportunities, tagged "AI found", with no cap on how many.` : ''} KOL opinions are quoted with attribution and are not recommendations. <span class="warn">AI search can misread posts: verify the contract and mint link on the project's official X before minting, and never click links from DMs or replies.</span>`,
+      health: (n, err) => `The check has failed ${n} times in a row; latest error: ${err}`,
+      langNote: 'Project details, AI checks and KOL notes are shown as archived (Chinese).',
+      statTotal: 'Projects', statWl: 'Whitelist open', statSoon: 'Minting in 7 days', statChanged: 'Changed in 24h', statLastCheck: 'Last check (UTC+8)',
+      tabAll: 'All', tabToday: 'Minting today', tabCurated: 'Watchlist', tabWl: 'Whitelist open', tabSoon: 'Minting soon', tabChanged: 'Recently changed', tabDiscovered: 'AI found',
+      sortSoon: 'Mint time', sortChanged: 'Latest change', sortScore: 'Score', sortFirst: 'Newest added', sortName: 'Name',
+      searchPlaceholder: 'Search project, chain, GTD, raffle, Arc…',
+      emptyOffline: 'The NFT tracker has not started or has not exported data yet. Check back later.',
+      emptyNoRows: 'The tracker is running but the watchlist is empty.',
+      footerNote: () => `Sources: official project X accounts, websites and KOL posts, compiled by an AI (grok) with web search; watchlist details and KOL notes are entered by hand. Machine-readable: <a href="/nft/data.json">nft/data.json</a>.`,
+      badgeDiscovered: 'AI found', badgeChanged: 'Changed in 24h', badgeScore: (s) => `Score ${s}/10`, badgeWait: 'First check running', badgeFailed: 'Check failed', badgeStale: 'Last check failed',
+      countdown: (ms) => { const h = ms / 3600_000; return h < 48 ? `Mints in ${Math.max(1, Math.round(h))}h` : `Mints in ${Math.round(h / 24)}d`; },
+      rowChain: 'Chain', rowCreator: 'Creator', rowSupply: 'Supply', rowPrice: 'Mint price', rowPerWallet: 'Per wallet', rowMechanism: 'Mechanism', rowMintTime: 'Mint time',
+      rowWl: 'Whitelist', rowWlDeadline: 'WL deadline', rowLatest: 'Latest', rowWhy: 'Why listed', rowNext: 'Do now', rowRisk: 'Risk', rowVerdict: 'Verdict', rowExtra: 'Note',
+      notesLabel: 'KOL notes', rowContract: 'Contract', linksLabel: 'Key links',
+      linkLabels: { x: 'X', site: 'Website', mint: 'Mint page', wl_apply: 'Whitelist form', wl_checker: 'WL checker', discord: 'Discord', telegram: 'Telegram', docs: 'Docs', market: 'Marketplace', explorer: 'Explorer', source: 'Source post', kol: 'KOL post' },
+      pendingWait: 'The AI is checking this project on X; refresh in a few minutes.', pendingFailed: 'The AI check failed repeatedly; see the official X account.',
+      fields: { stage: 'Stage', mint_time_utc: 'Mint time', mint_price: 'Mint price', supply: 'Supply', per_wallet: 'Per wallet' },
+      moreChanges: (n) => `${n} changes`, moreSources: (n) => `${n} sources`,
+      metaFirst: 'Added', metaChecked: 'Checked', metaNext: 'Next', metaSite: 'Website',
     },
   },
 };
@@ -456,9 +557,306 @@ function renderCelebCard(s, todayMs, weekMs, L) {
 </article>`;
 }
 
+// ---------- NFT 打新机会卡片 ----------
+const NFT_OPEN_STAGES = new Set(['白名单申请中', '铸造中']);
+// 关键链接按钮的顺序(键与 nft/nft_monitor.py LINK_KEYS 一致)
+const NFT_LINK_KEYS = ['mint', 'site', 'wl_apply', 'wl_checker', 'discord', 'telegram', 'docs', 'market', 'explorer'];
+const NFT_DONE_STAGES = new Set(['已售罄', '已上市', '延期或取消']);
+const safeUrl = (u) => (/^https?:\/\//i.test(String(u || '')) ? String(u) : '');
+const xUrl = (handle) => `https://x.com/${encodeURIComponent(handle)}`;
+const MINT_DATE_RE = /(20\d{2})-(\d{1,2})-(\d{1,2})/;
+/** 铸造日(北京时间 YYYY-MM-DD):优先用换算好的时间戳,其次从铸造时间原文里抠日期 */
+function mintDayKey(p) {
+  if (okTs(p.mintTs)) return fmtIsoDate(p.mintTs);
+  const m = MINT_DATE_RE.exec(plain(p.snapshot?.mint_time) || '');
+  return m ? `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}` : '';
+}
+/** 展示值:最近一次核查 > 名单人工资料 > AI 发现线索 */
+function nftView(p, nowMs) {
+  const s = p.snapshot || null;
+  const c = p.curated || {};
+  const d = p.discovered || {};
+  const pick = (k) => [s?.[k], c[k], d[k]].find(has) ?? '';
+  const stage = s?.stage && s.stage !== '未知' ? s.stage : '';
+  const mintTs = okTs(p.mintTs) ? p.mintTs : null;
+  const future = mintTs != null && mintTs > nowMs;
+  const minting = stage === '铸造中';
+  const soon = minting || (future && mintTs - nowMs <= 7 * 86400_000 && !NFT_DONE_STAGES.has(stage));
+  const changed = okTs(p.lastChangeTs) && nowMs - p.lastChangeTs <= 86400_000;
+  const score = s && Number.isFinite(s.score) ? s.score : null;
+  // 排序键:正在铸造最前,其次铸造时间越近越前,没公布时间的排后
+  const soonKey = minting ? 1e13 : future ? 1e13 - mintTs : 0;
+  const name = plain(s?.name) || c.name || d.name || p.name || `@${p.handle}`;
+  return { s, c, d, pick, stage, mintTs, future, soon, changed, score, soonKey, name, curated: p.origin !== 'discovered' };
+}
+function renderNftCard(p, nowMs, L) {
+  const T = L.nft;
+  const v = nftView(p, nowMs);
+  const { s, c, d, pick } = v;
+  const badges = [];
+  if (!v.curated) badges.push(`<span class="badge badge-dim">${T.badgeDiscovered}</span>`);
+  else for (const tag of (Array.isArray(c.tags) ? c.tags : []).slice(0, 2)) badges.push(`<span class="badge badge-testnet">${esc(tag)}</span>`);
+  if (v.stage) badges.push(`<span class="badge ${NFT_OPEN_STAGES.has(v.stage) ? 'badge-new' : NFT_DONE_STAGES.has(v.stage) ? 'badge-dim' : 'badge-mid'}">${esc(L.enumStage(v.stage))}</span>`);
+  if (v.future && !NFT_DONE_STAGES.has(v.stage)) badges.push(`<span class="badge badge-new">${T.countdown(v.mintTs - nowMs)}</span>`);
+  if (v.changed) badges.push(`<span class="badge badge-low">${T.badgeChanged}</span>`);
+  if (v.score != null) badges.push(`<span class="badge ${scoreClass(v.score)}">${T.badgeScore(v.score)}</span>`);
+  if (!s) badges.push(p.trackStatus === 'failed' ? `<span class="badge badge-low">${T.badgeFailed}</span>` : `<span class="badge badge-dim badge-wait">${T.badgeWait}</span>`);
+  else if (p.trackStatus === 'failed') badges.push(`<span class="badge badge-low">${T.badgeStale}</span>`);
+  const mintTime = has(s?.mint_time) ? s.mint_time : v.mintTs ? `${fmtDateTime(v.mintTs, L)} (${L.tz})` : '';
+  const dl = dlRows([
+    [T.rowChain, pick('chain')],
+    [T.rowCreator, c.creator],
+    [T.rowSupply, pick('supply')],
+    [T.rowPrice, pick('mint_price')],
+    [T.rowPerWallet, pick('per_wallet')],
+    [T.rowMechanism, pick('mechanism')],
+    [T.rowContract, pick('contract')],
+    [T.rowMintTime, mintTime],
+    [T.rowWl, pick('wl_how'), 'row-verdict'],
+    [T.rowWlDeadline, s?.wl_deadline],
+    [T.rowLatest, s?.latest],
+    [T.rowWhy, v.curated ? '' : d.why],
+    [T.rowExtra, c.extra],
+    [T.rowNext, s?.next_action, 'row-verdict'],
+    [T.rowRisk, s?.risk, 'row-risk'],
+    [T.rowVerdict, s?.verdict],
+  ]);
+  const pending = s ? '' : `<p class="pending">${p.trackStatus === 'failed' ? T.pendingFailed : T.pendingWait}</p>`;
+  const notes = (Array.isArray(p.notes) ? p.notes : []).filter((n) => has(n?.text));
+  const notesHtml = notes.length
+    ? `<div class="notes"><div class="notes-label">${T.notesLabel}</div>${notes.map((n) => {
+        const by = esc(n.by || '');
+        const who = safeUrl(n.url) ? `<a href="${esc(n.url)}" target="_blank" rel="noopener nofollow">${by}</a>` : by;
+        return `<blockquote>${esc(plain(n.text))}<cite>${who}${n.date ? ` · ${esc(n.date)}` : ''}</cite></blockquote>`;
+      }).join('')}</div>`
+    : '';
+  // 关键链接:X 在最前,其后 铸造页 / 官网 / 白名单…(核查结果优先,名单人工资料兜底),再挂 AI 发现来源与 KOL 推文;同一网址只出现一次
+  const linkMap = { ...(c.links || {}), ...(s?.links || {}) };
+  if (!linkMap.site && c.site) linkMap.site = c.site;
+  const seenUrls = new Set();
+  const chips = [['x', xUrl(p.handle)], ...NFT_LINK_KEYS.map((k) => [k, linkMap[k]]), ['source', d.source_url], ...notes.map((n) => ['kol', n.url])]
+    .map(([k, u]) => [k, safeUrl(u)])
+    .filter(([, u]) => {
+      const key = u.replace(/\/+$/, '').toLowerCase();
+      if (!u || seenUrls.has(key)) return false;
+      seenUrls.add(key);
+      return true;
+    })
+    .map(([k, u]) => `<a class="link-chip${k === 'mint' ? ' link-mint' : ''}" href="${esc(u)}" target="_blank" rel="noopener nofollow" title="${esc(u)}">${esc(T.linkLabels[k] || k)}</a>`);
+  const linksHtml = `<nav class="links" aria-label="${T.linksLabel}">${chips.join('')}</nav>`;
+  const changes = Array.isArray(p.changes) ? p.changes : [];
+  const fieldVal = (f, x) => esc((f === 'stage' ? L.enumStage(plain(x)) : plain(x)) || '—');
+  const history = changes.length
+    ? `<details class="more"><summary>${T.moreChanges(changes.length)}</summary><ul>${changes.map((x) => `<li><small>${fmtDateTime(x.ts, L)}</small> ${esc(T.fields[x.field] || x.field)}: ${fieldVal(x.field, x.old)} → ${fieldVal(x.field, x.new)}</li>`).join('')}</ul></details>`
+    : '';
+  const sources = [...new Set([...(Array.isArray(s?.sources) ? s.sources : []), d.source_url].map(safeUrl).filter(Boolean))];
+  const srcs = sources.length
+    ? `<details class="more"><summary>${T.moreSources(sources.length)}</summary><ul>${sources.map((u) => `<li><a href="${esc(u)}" target="_blank" rel="noopener nofollow">${esc(u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 90))}</a></li>`).join('')}</ul></details>`
+    : '';
+  const site = safeUrl(c.site);
+  const meta = [
+    `<span>${T.metaFirst} <time datetime="${okTs(p.firstSeenTs) ? new Date(p.firstSeenTs).toISOString() : ''}">${fmtDate(p.firstSeenTs, L)}</time></span>`,
+    okTs(p.lastTrackTs) ? `<span>${T.metaChecked} <time datetime="${new Date(p.lastTrackTs).toISOString()}">${fmtDateTime(p.lastTrackTs, L)}</time></span>` : '',
+    okTs(p.nextTrackTs) && p.nextTrackTs > nowMs ? `<span>${T.metaNext} ${fmtDateTime(p.nextTrackTs, L)}</span>` : '',
+    `<a href="${xUrl(p.handle)}" target="_blank" rel="noopener nofollow">@${esc(p.handle)}</a>`,
+    site ? `<a href="${esc(site)}" target="_blank" rel="noopener nofollow">${T.metaSite}</a>` : '',
+  ].filter(Boolean).join('');
+  const search = [v.name, p.handle, ...(Array.isArray(c.tags) ? c.tags : []), c.creator, pick('chain'), pick('supply'), pick('mint_price'), pick('mechanism'), pick('wl_how'), s?.latest, s?.verdict, d.why, ...notes.map((n) => `${n.by} ${n.text}`)]
+    .map(plain).join(' ').toLowerCase();
+  const mintsToday = mintDayKey(p) === fmtIsoDate(nowMs) && !NFT_DONE_STAGES.has(v.stage);
+  return `<article class="card" id="nft-${esc(String(p.handle).toLowerCase())}" data-todaymint="${mintsToday ? 1 : 0}" data-curated="${v.curated ? 1 : 0}" data-discovered="${v.curated ? 0 : 1}" data-wl="${v.stage === '白名单申请中' ? 1 : 0}" data-soon="${v.soon ? 1 : 0}" data-changed="${v.changed ? 1 : 0}" data-mint="${v.soonKey}" data-change="${okTs(p.lastChangeTs) ? p.lastChangeTs : 0}" data-score="${v.score ?? -1}" data-first="${okTs(p.firstSeenTs) ? p.firstSeenTs : 0}" data-search="${esc(search)}">
+  <header class="card-head">
+    <h2><a href="${xUrl(p.handle)}" target="_blank" rel="noopener nofollow">${esc(v.name)}</a></h2>
+    ${badges.length ? `<div class="badges">${badges.join('')}</div>` : ''}
+  </header>
+  ${linksHtml}
+  <dl>${dl}</dl>
+  ${pending}
+  ${notesHtml}
+  ${history}
+  ${srcs}
+  <footer class="card-meta">${meta}</footer>
+</article>`;
+}
+
+// ---------- 铸造日历 ----------
+/** 已定日期的项目按铸造日分组,只看今天及以后;compact=右侧栏窄版 */
+function calendarDays(nftRows, nowMs) {
+  const today = fmtIsoDate(nowMs);
+  const byDay = new Map();
+  let undated = 0;
+  for (const p of nftRows) {
+    const v = nftView(p, nowMs);
+    if (NFT_DONE_STAGES.has(v.stage)) continue;
+    const day = mintDayKey(p);
+    if (!day) { undated++; continue; }
+    if (day < today) continue;
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push({ p, v });
+  }
+  for (const list of byDay.values()) list.sort((a, b) => (a.p.mintTs || 0) - (b.p.mintTs || 0));
+  return { days: [...byDay.entries()].sort((a, b) => a[0].localeCompare(b[0])), undated, today };
+}
+function dayLabel(day, today, nowMs, L) {
+  const T = L.cal;
+  const dayMs = Date.parse(`${day}T00:00:00+08:00`);
+  const diff = Math.round((dayMs - Date.parse(`${today}T00:00:00+08:00`)) / 86400_000);
+  const date = fmtDate(dayMs + 12 * 3600_000, L);
+  if (diff === 0) return `${date} · ${T.today}`;
+  if (diff === 1) return `${date} · ${T.tomorrow}`;
+  return `${date} · ${T.inDays(diff)}`;
+}
+function calItem({ p, v }, L, applied) {
+  const T = L.cal;
+  const time = okTs(p.mintTs) ? fmtDateTime(p.mintTs, L).slice(-5) : T.tba;
+  const tags = [
+    applied.has(String(p.handle).toLowerCase()) ? `<span class="badge badge-new">${T.applied}</span>` : '',
+    v.stage === '铸造中' ? `<span class="badge badge-testnet">${esc(L.enumStage(v.stage))}</span>` : '',
+    v.curated ? '' : `<span class="badge badge-dim">${L.nft.badgeDiscovered}</span>`,
+  ].filter(Boolean).join('');
+  const price = has(v.pick('mint_price')) ? `<small>${esc(plain(v.pick('mint_price')).slice(0, 28))}</small>` : '';
+  return `<li class="cal-item"><b class="cal-time">${esc(time)}</b><a href="${pageHref('nft', L)}#nft-${esc(String(p.handle).toLowerCase())}">${esc(v.name)}</a>${tags}${price}</li>`;
+}
+/** NFT 页顶部的完整日历 */
+function renderCalendar(nftRows, nowMs, L, applied) {
+  const T = L.cal;
+  const { days, undated, today } = calendarDays(nftRows, nowMs);
+  if (!days.length) return `<section class="cal"><h2 class="cal-title">${T.title}</h2><p class="panel-note">${T.none}${undated ? ` ${T.undated(undated)}` : ''}</p></section>`;
+  const blocks = days.slice(0, 14).map(([day, list]) =>
+    `<div class="cal-day"><h3>${esc(dayLabel(day, today, nowMs, L))}<small>${T.count(list.length)}</small></h3><ul>${list.map((x) => calItem(x, L, applied)).join('')}</ul></div>`).join('');
+  return `<section class="cal"><h2 class="cal-title">${T.title}</h2><div class="cal-grid">${blocks}</div>${undated ? `<p class="panel-note">${T.undated(undated)}</p>` : ''}</section>`;
+}
+/** 右侧栏的窄版:最近 6 条 */
+function renderCalendarPanel(nftRows, nowMs, L, applied) {
+  const T = L.cal;
+  const { days, today } = calendarDays(nftRows, nowMs);
+  const flat = [];
+  for (const [day, list] of days) for (const x of list) flat.push([day, x]);
+  if (!flat.length) return '';
+  const shown = flat.slice(0, 6);
+  return `<section class="panel"><h2 class="panel-title">${T.panelTitle}</h2><ul class="plist cal-panel">`
+    + shown.map(([day, x]) => `<li><div class="cal-panel-day">${esc(dayLabel(day, today, nowMs, L))}</div>${calItem(x, L, applied)}</li>`).join('')
+    + `</ul>${flat.length > shown.length ? `<p class="panel-note"><a href="${pageHref('nft', L)}">${T.more(flat.length - shown.length)}</a></p>` : ''}</section>`;
+}
+
+// ---------- 右侧参与表(网站管理员自用) ----------
+async function loadParticipation() {
+  try {
+    const d = JSON.parse(await fs.readFile(PARTICIPATION_PATH, 'utf8'));
+    return Array.isArray(d.items) ? d.items : [];
+  } catch (err) {
+    if (err?.code !== 'ENOENT') console.warn(`[airdrop-site] participation.json unreadable: ${err?.message || err}`);
+    return [];
+  }
+}
+/** NFT 项目带 handle 的,顺带显示追踪到的实时进度(阶段、铸造时间、倒计时)并链到卡片 */
+function renderSidebar(items, nftByHandle, nowMs, L) {
+  const T = L.side;
+  const tr = (it, k) => (L.code === 'en' && has(it[`${k}En`]) ? it[`${k}En`] : it[k]);
+  const lis = items.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).map((it) => {
+    const handle = String(it.handle || '').replace(/^@/, '');
+    const row = handle ? nftByHandle.get(handle.toLowerCase()) : null;
+    let progress = '';
+    if (row) {
+      const v = nftView(row, nowMs);
+      const bits = [];
+      if (v.stage) bits.push(L.enumStage(v.stage));
+      // 侧栏窄:有钟点就用钟点;只有文字描述时截到 32 字,完整内容在追踪卡片里
+      const rawMt = v.mintTs ? `${fmtDateTime(v.mintTs, L)} (${L.tz})` : has(v.s?.mint_time) ? plain(v.s.mint_time) : '';
+      const mt = [...rawMt].length > 32 ? `${[...rawMt].slice(0, 32).join('')}…` : rawMt;
+      if (mt) bits.push(`${T.mint} ${mt}`);
+      if (v.future && !NFT_DONE_STAGES.has(v.stage)) bits.push(L.nft.countdown(v.mintTs - nowMs));
+      progress = bits.join(' · ');
+    }
+    const href = safeUrl(it.link) || (handle ? xUrl(handle) : '');
+    const name = esc(it.project || handle);
+    const head = href ? `<a href="${esc(href)}" target="_blank" rel="noopener nofollow">${name}</a>` : `<b>${name}</b>`;
+    const sec = T.sections[it.section] ? `<span class="badge badge-dim">${esc(T.sections[it.section])}</span>` : '';
+    const track = row ? `<a class="ptrack" href="${pageHref('nft', L)}#nft-${esc(handle.toLowerCase())}">${T.track}</a>` : '';
+    const dl = dlRows([
+      [T.rowAction, tr(it, 'action')],
+      [T.rowStatus, tr(it, 'status'), 'row-verdict'],
+      [T.rowProgress, progress],
+      [T.rowNext, tr(it, 'next')],
+      [T.rowDate, it.date],
+    ]);
+    return `<li class="pitem"><div class="pitem-head">${head}${sec}</div><dl class="pdl">${dl}</dl>${track}</li>`;
+  });
+  return `<section class="panel" aria-labelledby="participation-title"><h2 class="panel-title" id="participation-title">${T.title}</h2><p class="panel-note">${T.note}</p>`
+    + (lis.length ? `<ol class="plist">${lis.join('')}</ol>` : `<p class="panel-note">${T.empty}</p>`) + `</section>`;
+}
+
+// ---------- 置顶卡:站长自营项目(pinned.json) ----------
+async function loadPinned() {
+  try {
+    const d = JSON.parse(await fs.readFile(PINNED_PATH, 'utf8'));
+    return Array.isArray(d.items) ? d.items : [];
+  } catch (err) {
+    if (err?.code !== 'ENOENT') console.warn(`[airdrop-site] pinned.json unreadable: ${err?.message || err}`);
+    return [];
+  }
+}
+/** until(北京时间日期,含当天)一过就自动不再显示;order 升序 */
+function activePinned(items, nowMs) {
+  return items
+    .filter((it) => {
+      const end = it.until ? isoToMs(`${it.until}T23:59:59+08:00`) : null;
+      return end == null || end >= nowMs;
+    })
+    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+}
+const pinTr = (o, k, L) => (L.code === 'en' && has(o?.[`${k}En`]) ? o[`${k}En`] : o?.[k]);
+/** 关键日期:按构建时刻定位当前阶段并高亮,再给一句「距下一阶段还有 N 天」 */
+function pinnedPhases(it, nowMs, L) {
+  const list = (Array.isArray(it.phases) ? it.phases : [])
+    .map((p) => ({ ...p, ts: isoToMs(p.at) }))
+    .filter((p) => p.ts != null)
+    .sort((a, b) => a.ts - b.ts);
+  let cur = -1;
+  for (let i = 0; i < list.length; i++) if (list[i].ts <= nowMs) cur = i;
+  const next = list[cur + 1] || null;
+  const line = next ? L.pin.until(plain(pinTr(next, 'label', L)), next.ts - nowMs)
+    : cur >= 0 ? L.pin.ongoing(plain(pinTr(list[cur], 'label', L))) : '';
+  const chips = list.map((p, i) => {
+    const note = has(pinTr(p, 'note', L)) ? ` <small>${esc(plain(pinTr(p, 'note', L)))}</small>` : '';
+    return `<li class="pin-phase${i === cur ? ' is-now' : ''}"><b>${esc(plain(pinTr(p, 'label', L)))}</b>`
+      + `<time datetime="${new Date(p.ts).toISOString()}">${esc(fmtDateTime(p.ts, L))}</time>${note}</li>`;
+  }).join('');
+  return { chips, line };
+}
+/** 四个页面主内容最顶部的置顶卡;没有在期条目就整块不渲染 */
+function renderPinned(items, nowMs, L) {
+  if (!items.length) return '';
+  const T = L.pin;
+  const cards = items.map((it) => {
+    const links = (Array.isArray(it.links) ? it.links : [])
+      .map((x) => [safeUrl(x.url), plain(pinTr(x, 'label', L)), x.primary])
+      .filter(([u, label]) => u && label)
+      .map(([u, label, primary]) => `<a class="link-chip${primary ? ' link-primary' : ''}" href="${esc(u)}" target="_blank" rel="noopener">${esc(label)}</a>`)
+      .join('');
+    const tagList = pinTr(it, 'tags', L);
+    const tags = (Array.isArray(tagList) ? tagList : []).slice(0, 4)
+      .map((x) => `<span class="badge badge-testnet">${esc(plain(x))}</span>`).join('');
+    const art = safeUrl(it.image)
+      ? `<div class="pin-art"><img src="${esc(it.image)}" alt="${esc(plain(it.imageAlt || it.name || ''))}" loading="lazy" decoding="async" width="1200" height="630"></div>`
+      : '';
+    const { chips, line } = pinnedPhases(it, nowMs, L);
+    const badge = plain(pinTr(it, 'badge', L)) || T.badge;
+    return `<article class="panel pin">${art}<div class="pin-body">`
+      + `<div class="pin-head"><h2 class="pin-name">${esc(plain(it.name))}</h2><span class="badge badge-mine">${esc(badge)}</span>${tags}</div>`
+      + (has(pinTr(it, 'tagline', L)) ? `<p class="pin-tagline">${esc(plain(pinTr(it, 'tagline', L)))}</p>` : '')
+      + (has(pinTr(it, 'blurb', L)) ? `<p class="pin-blurb">${esc(plain(pinTr(it, 'blurb', L)))}</p>` : '')
+      + (chips ? `<ul class="pin-phases">${chips}</ul>` : '')
+      + (line ? `<p class="pin-line">${esc(line)} <small>${esc(T.tzNote)}</small></p>` : '')
+      + (links ? `<nav class="links pin-links" aria-label="${esc(T.label)}">${links}</nav>` : '')
+      + `<p class="pin-note">${esc(T.note)}</p></div></article>`;
+  }).join('');
+  return `<section class="pinned" aria-label="${esc(T.label)}">${cards}</section>`;
+}
+
 // ---------- 页面拼装 ----------
 /** 每个页面在两种语言下的路径(相对站根,不带前导 /) */
-const PAGE_PATH = { airdrop: '', btt: 'btt/', celeb: 'celeb/' };
+const PAGE_PATH = { airdrop: '', btt: 'btt/', celeb: 'celeb/', nft: 'nft/' };
 const pageHref = (page, L) => `/${L.dir}${PAGE_PATH[page]}`;
 const pageUrl = (page, L) => `${SITE_URL}${L.dir}${PAGE_PATH[page]}`;
 
@@ -466,7 +864,7 @@ function nav(active, counts, L) {
   const item = (href, key, label, n) =>
     `<a class="cat" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}<small>${n}</small></a>`;
   const other = LOCALES[L.switchLang];
-  return `<div class="navwrap"><nav class="cats" aria-label="${L.navLabel}">${item(pageHref('airdrop', L), 'airdrop', L.navAirdrop, counts.airdrop)}${item(pageHref('btt', L), 'btt', L.navBtt, counts.btt)}${item(pageHref('celeb', L), 'celeb', L.navCeleb, counts.celeb)}</nav>`
+  return `<div class="navwrap"><nav class="cats" aria-label="${L.navLabel}">${item(pageHref('airdrop', L), 'airdrop', L.navAirdrop, counts.airdrop)}${item(pageHref('btt', L), 'btt', L.navBtt, counts.btt)}${item(pageHref('celeb', L), 'celeb', L.navCeleb, counts.celeb)}${item(pageHref('nft', L), 'nft', L.navNft, counts.nft)}</nav>`
     + `<a class="lang-switch" href="${pageHref(active, other)}" hreflang="${other.htmlLang}" lang="${other.htmlLang}" data-lang="${other.code}">${L.switchLabel}</a></div>`;
 }
 function stat(value, label) {
@@ -501,6 +899,7 @@ function pageCommon(page, L, generatedTs) {
     T_FILTER: L.filterLabel,
     T_SORT: L.sortLabel,
     T_EMPTY: L.empty,
+    TOP: '',
     FRIENDS: `${esc(L.friendsLabel)} ` + FRIEND_URLS.map((href, i) => `<a href="${href}" rel="noopener">${esc(L.friends[i])}</a>`).join(' · '),
     FOOTER_SYNC: L.footerSync(`<time datetime="${new Date(generatedTs).toISOString()}">${fmtDateTime(generatedTs, L)}</time>`),
   };
@@ -511,7 +910,7 @@ function jsonLd(page, L, { title, description, generatedTs, listName, items }) {
   const site = `${SITE_URL}${L.dir}`;
   const url = pageUrl(page, L);
   const graph = [
-    { '@type': 'Organization', '@id': `${ORG_URL}#organization`, name: 'SatLoot', url: ORG_URL, sameAs: [GITHUB_URL] },
+    { '@type': 'Organization', '@id': `${ORG_URL}#organization`, name: 'SatLoot', url: ORG_URL, sameAs: [GITHUB_URL, 'https://x.com/eth61675'] },
     { '@type': 'WebSite', '@id': `${site}#website`, url: site, name: L.siteName, inLanguage: L.htmlLang, publisher: { '@id': `${ORG_URL}#organization` } },
     {
       '@type': 'WebPage', '@id': url, url, name: title, description, inLanguage: L.htmlLang, isPartOf: { '@id': `${site}#website` },
@@ -547,12 +946,13 @@ async function writeAtomic(file, content) {
 
 async function main() {
   await copyStatic();
-  const [projects, status, reports, btt, celeb] = await Promise.all([
+  const [projects, status, reports, btt, celeb, nft] = await Promise.all([
     getJson('/api/airdrop/projects?limit=1000', 'projects.json'),
     getJson('/api/airdrop/status', 'status.json'),
     getJson('/api/airdrop/reports?limit=10', 'reports.json'),
     loadBtt(),
     loadCeleb(),
+    loadNft(),
   ]);
   const rows = Array.isArray(projects?.rows) ? projects.rows : [];
   if (projects?.mode !== 'rollup') throw new Error(`unexpected projects mode: ${projects?.mode}`);
@@ -588,7 +988,35 @@ async function main() {
   const celebLastOk = isoToMs(celeb?.lastOkAt);
   const celebMinutes = celeb?.checkEverySec ? Math.round(celeb.checkEverySec / 60) : 10;
   const celebWatch = Array.isArray(celeb?.watchlist) ? celeb.watchlist.length : 0;
-  const counts = { airdrop: rows.length, btt: bttTotal, celeb: celebTotal };
+  const nftRows = Array.isArray(nft?.rows) ? nft.rows.slice() : [];
+  const nftViews = new Map(nftRows.map((p) => [p, nftView(p, generatedTs)]));
+  const nv = (p) => nftViews.get(p);
+  nftRows.sort((a, b) => nv(b).soonKey - nv(a).soonKey || Number(nv(b).curated) - Number(nv(a).curated) || (nv(b).score ?? -1) - (nv(a).score ?? -1) || (a.firstSeenTs || 0) - (b.firstSeenTs || 0));
+  const nftWl = nftRows.filter((p) => nv(p).stage === '白名单申请中').length;
+  const nftSoon = nftRows.filter((p) => nv(p).soon).length;
+  const nftChanged = nftRows.filter((p) => nv(p).changed).length;
+  const nftCurated = nftRows.filter((p) => nv(p).curated).length;
+  const nftDiscovered = nftRows.length - nftCurated;
+  const nftLastOk = isoToMs(nft?.lastTrackAt);
+  const hrs = (v, dflt) => (Number.isFinite(v) ? Math.round(v / 3600) : dflt);
+  const nftTiers = {
+    nearApplied: hrs(nft?.appliedNearTrackEverySec, 1),
+    near: hrs(nft?.nearTrackEverySec, 4),
+    dated: hrs(nft?.trackEverySec, 12),
+    wl: hrs(nft?.wlTrackEverySec, 24),
+    quiet: hrs(nft?.quietTrackEverySec, 48),
+  };
+  const nftDiscoverHours = nft?.discoverEverySec ? Math.round(nft.discoverEverySec / 3600) : 0;
+  const counts = { airdrop: rows.length, btt: bttTotal, celeb: celebTotal, nft: nftRows.length };
+  const pinned = activePinned(await loadPinned(), generatedTs);
+  const pinnedTop = (L) => renderPinned(pinned, generatedTs, L);
+  const participation = await loadParticipation();
+  const nftByHandle = new Map(nftRows.map((p) => [String(p.handle || '').toLowerCase(), p]));
+  const appliedHandles = new Set(participation.filter((it) => it.section === 'nft')
+    .map((it) => String(it.handle || '').replace(/^@/, '').toLowerCase()).filter(Boolean));
+  const nftToday = nftRows.filter((p) => mintDayKey(p) === fmtIsoDate(generatedTs) && !NFT_DONE_STAGES.has(nv(p).stage)).length;
+  // 右侧栏:先近期铸造,再参与表
+  const sidebar = (L) => renderCalendarPanel(nftRows, generatedTs, L, appliedHandles) + renderSidebar(participation, nftByHandle, generatedTs, L);
 
   const template = await fs.readFile(path.join(__dirname, 'template.html'), 'utf8');
 
@@ -598,6 +1026,8 @@ async function main() {
     const description = T.description(rows.length, fmtDateTime(latestOkTs, L));
     return render(template, {
       ...pageCommon('airdrop', L, generatedTs),
+      SIDEBAR: sidebar(L),
+      TOP: pinnedTop(L),
       PAGE_TITLE: T.title,
       DESCRIPTION: description,
       JSON_LD: jsonLd('airdrop', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: rows.slice(0, 20).map((r) => ({ name: r.name })) }),
@@ -636,6 +1066,8 @@ async function main() {
     const description = btt ? T.description(bttTotal, bttToday, bttAnalyzed, fmtDateTime(bttLastOk, L)) : T.descriptionOffline;
     return render(template, {
       ...pageCommon('btt', L, generatedTs),
+      SIDEBAR: sidebar(L),
+      TOP: pinnedTop(L),
       PAGE_TITLE: T.title,
       DESCRIPTION: description,
       JSON_LD: jsonLd('btt', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: bttRows.slice(0, 20).map((p) => ({ name: p.title, url: p.url })) }),
@@ -672,6 +1104,8 @@ async function main() {
     const description = celeb ? T.description(celebTotal, celebStrong, celebToday, fmtDateTime(celebLastOk, L)) : T.descriptionOffline;
     return render(template, {
       ...pageCommon('celeb', L, generatedTs),
+      SIDEBAR: sidebar(L),
+      TOP: pinnedTop(L),
       PAGE_TITLE: T.title,
       DESCRIPTION: description,
       JSON_LD: jsonLd('celeb', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: celebRows.slice(0, 20).map((s) => ({ name: [s.person, s.ticker ? `$${s.ticker}` : ''].filter(Boolean).join(' ') || s.title, url: s.url })) }),
@@ -693,11 +1127,52 @@ async function main() {
     });
   };
 
+  // ---- NFT 打新机会页 ----
+  const nftPage = (L) => {
+    const T = L.nft;
+    let cards;
+    if (!nft) {
+      cards = `<p class="empty-initial">${T.emptyOffline}</p>`;
+    } else if (!nftRows.length) {
+      cards = `<p class="empty-initial">${T.emptyNoRows}</p>`;
+    } else {
+      cards = nftRows.map((p) => renderNftCard(p, generatedTs, L)).join('\n');
+    }
+    // 核查报错原文可能是一整段 JSON,截短再显示
+    const nftErr = plain(nft?.lastError || '').replace(/\s*\{[\s\S]*$/, '').slice(0, 120);
+    const health = nft && nft.failStreak > 0 ? `<span class="warn">${T.health(nft.failStreak, esc(nftErr))}</span>` : '';
+    const description = nft ? T.description(nftRows.length, nftWl, nftSoon, fmtDateTime(nftLastOk, L)) : T.descriptionOffline;
+    return render(template, {
+      ...pageCommon('nft', L, generatedTs),
+      SIDEBAR: sidebar(L),
+      PAGE_TITLE: T.title,
+      DESCRIPTION: description,
+      JSON_LD: jsonLd('nft', L, { title: T.title, description, generatedTs, listName: T.heroTitle, items: nftRows.slice(0, 20).map((p) => ({ name: nv(p).name, url: xUrl(p.handle) })) }),
+      NAV: nav('nft', counts, L),
+      HERO_TITLE: T.heroTitle,
+      HERO_LEDE: T.heroLede(nftTiers, nftDiscoverHours) + health,
+      STATS: [
+        stat(nft ? nftRows.length : '—', T.statTotal),
+        stat(nft ? nftWl : '—', T.statWl),
+        stat(nft ? nftSoon : '—', T.statSoon),
+        stat(nft ? nftChanged : '—', T.statChanged),
+        stat(fmtDateTime(nftLastOk, L), T.statLastCheck),
+      ].join(''),
+      TOP: pinnedTop(L) + renderCalendar(nftRows, generatedTs, L, appliedHandles),
+      TABS: [tab('all', T.tabAll, nftRows.length, true), tab('todaymint', T.tabToday, nftToday), tab('curated', T.tabCurated, nftCurated), tab('wl', T.tabWl, nftWl), tab('soon', T.tabSoon, nftSoon), tab('changed', T.tabChanged, nftChanged), tab('discovered', T.tabDiscovered, nftDiscovered)].join(''),
+      SORT_OPTIONS: `<option value="mint">${T.sortSoon}</option><option value="change">${T.sortChanged}</option><option value="score">${T.sortScore}</option><option value="first">${T.sortFirst}</option><option value="name">${T.sortName}</option>`,
+      SEARCH_PLACEHOLDER: T.searchPlaceholder,
+      CARDS: cards,
+      FOOTER_NOTE: T.footerNote(),
+    });
+  };
+
   await fs.mkdir(OUT_DIR, { recursive: true });
   for (const L of [LOCALES.zh, LOCALES.en]) {
     await writeAtomic(path.join(OUT_DIR, L.dir, 'index.html'), airdropPage(L));
     await writeAtomic(path.join(OUT_DIR, L.dir, 'btt', 'index.html'), bttPage(L));
     await writeAtomic(path.join(OUT_DIR, L.dir, 'celeb', 'index.html'), celebPage(L));
+    await writeAtomic(path.join(OUT_DIR, L.dir, 'nft', 'index.html'), nftPage(L));
   }
   await writeAtomic(path.join(OUT_DIR, 'data.json'), JSON.stringify({
     generatedAt: new Date(generatedTs).toISOString(),
@@ -709,6 +1184,7 @@ async function main() {
   }, null, 1));
   if (btt) await writeAtomic(path.join(OUT_DIR, 'btt', 'data.json'), JSON.stringify(btt, null, 1));
   if (celeb) await writeAtomic(path.join(OUT_DIR, 'celeb', 'data.json'), JSON.stringify(celeb, null, 1));
+  if (nft) await writeAtomic(path.join(OUT_DIR, 'nft', 'data.json'), JSON.stringify(nft, null, 1));
   await writeAtomic(path.join(OUT_DIR, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}sitemap.xml\n`);
 
   // sitemap:六个 URL,每个都带同页另一语言的 hreflang alternate(x-default 指中文)
@@ -726,8 +1202,10 @@ async function main() {
     smUrl('btt', LOCALES.en, bttLastOk ?? generatedTs, 'hourly') +
     smUrl('celeb', LOCALES.zh, celebLastOk ?? generatedTs, 'hourly') +
     smUrl('celeb', LOCALES.en, celebLastOk ?? generatedTs, 'hourly') +
+    smUrl('nft', LOCALES.zh, nftLastOk ?? generatedTs, 'hourly') +
+    smUrl('nft', LOCALES.en, nftLastOk ?? generatedTs, 'hourly') +
     `</urlset>\n`);
-  console.log(`[airdrop-site] airdrop ${rows.length} (${testnetCount} testnet, ${newCount} new), btt ${btt ? `${bttTotal} posts (${bttToday} today, ${bttAnalyzed} analyzed)` : 'unavailable'}, celeb ${celeb ? `${celebTotal} events (${celebStrong} strong, ${celebToday} today)` : 'unavailable'} -> ${OUT_DIR} (zh + en)`);
+  console.log(`[airdrop-site] airdrop ${rows.length} (${testnetCount} testnet, ${newCount} new), btt ${btt ? `${bttTotal} posts (${bttToday} today, ${bttAnalyzed} analyzed)` : 'unavailable'}, celeb ${celeb ? `${celebTotal} events (${celebStrong} strong, ${celebToday} today)` : 'unavailable'}, nft ${nft ? `${nftRows.length} projects (${nftWl} wl open, ${nftSoon} soon, ${nftChanged} changed)` : 'unavailable'} ->${OUT_DIR} (zh + en)`);
 }
 
 main().catch((err) => {

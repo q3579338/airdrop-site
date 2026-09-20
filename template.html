@@ -43,13 +43,31 @@ html:lang(en){--dt-w:110px}
 html{color-scheme:light}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--accent)}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.content{min-width:0}
+.side{position:sticky;top:76px;margin:22px 0 40px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.panel-title{margin:0 0 4px;font-size:16px;letter-spacing:-.01em}
+.panel-note{margin:0 0 12px;font-size:12px;line-height:1.55;color:var(--text-faint)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.pitem{padding-top:12px;border-top:1px dashed var(--border)}
+.pitem:first-child{padding-top:0;border-top:0}
+.pitem-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.pitem-head a,.pitem-head b{font-size:15px;font-weight:700;color:var(--text);text-decoration:none}
+.pitem-head a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.pdl{gap:4px}
+.pdl .row{grid-template-columns:62px 1fr;gap:6px;font-size:13px}
+html:lang(en) .pdl .row{grid-template-columns:70px 1fr}
+.ptrack{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:600;text-decoration:none}
+.card{scroll-margin-top:84px}
+@media (max-width:1100px){.layout{grid-template-columns:1fr;gap:0}.side{position:static;order:-1;margin:16px 0 0}}
 .hero{padding:30px 0 26px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--surface-2),var(--bg))}
 .topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px}
 .brand{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--text-dim);text-transform:uppercase}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-bg)}
 .navwrap{display:inline-flex;align-items:center;gap:10px}
-.cats{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.cats{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
 .lang-switch{display:inline-flex;align-items:center;padding:7px 12px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:12.5px;font-weight:700;color:var(--text-dim);text-decoration:none;transition:.15s}
 .lang-switch:hover{color:var(--accent);border-color:var(--accent-border)}
 .langnote{margin:8px 0 0;max-width:760px;font-size:12px;color:var(--text-faint)}
@@ -89,6 +107,33 @@ h1{margin:22px 0 8px;font-size:clamp(26px,4vw,36px);line-height:1.2;letter-spaci
 .badge-low{color:var(--low);background:var(--low-bg);border-color:var(--low-border)}
 .badge-wait{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* 置顶卡:站长自营项目(build.mjs renderPinned / pinned.json) */
+.pinned{margin:22px 0 4px}
+.pin{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;align-items:start;padding:18px}
+.pin+.pin{margin-top:14px}
+.pin-art{margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface-2);line-height:0}
+.pin-art img{display:block;width:100%;height:auto;aspect-ratio:1200/630;object-fit:cover}
+.pin-body{min-width:0}
+.pin-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.pin-name{margin:0;font-size:20px;line-height:1.25;letter-spacing:-.01em;overflow-wrap:anywhere}
+.badge-mine{color:var(--new);background:var(--new-bg);border-color:var(--new-border)}
+.pin-tagline{margin:6px 0 0;font-size:15px;font-weight:600;color:var(--text)}
+.pin-blurb{margin:6px 0 0;font-size:14px;color:var(--text-dim);overflow-wrap:anywhere}
+.pin-phases{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0}
+.pin-phase{display:flex;flex-direction:column;gap:1px;padding:6px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.pin-phase b{font-size:12px;font-weight:700;color:var(--text-dim)}
+.pin-phase time{color:var(--text)}
+.pin-phase small{color:var(--text-faint);font-size:11.5px}
+.pin-phase.is-now{border-color:var(--accent-border);background:var(--accent-bg)}
+.pin-phase.is-now b{color:var(--accent)}
+.pin-line{margin:10px 0 0;font-size:14px;font-weight:700;color:var(--accent)}
+.pin-line small{font-weight:500;color:var(--text-faint);font-size:12px}
+.pin-links{margin:12px 0 0}
+.link-primary{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent)}
+.pin-note{margin:10px 0 0;font-size:12px;line-height:1.55;color:var(--text-faint)}
+@media (max-width:700px){.pin{grid-template-columns:1fr;gap:12px;padding:16px}.pin-art{max-width:100%}.pin-phases{gap:6px}.pin-phase{flex:1 1 140px}}
+/* 窄屏下右侧栏默认排在主内容之前;有置顶卡时让置顶卡先露面(不支持 :has() 的浏览器保持原顺序) */
+@media (max-width:1100px){.layout:has(.pinned)>.side{order:1}}
 dl{margin:0;display:flex;flex-direction:column;gap:9px;flex:1}
 .row{display:grid;grid-template-columns:var(--dt-w) 1fr;gap:10px;font-size:14px}
 .row dt{color:var(--text-dim);font-size:12px;padding-top:2px;white-space:nowrap}
@@ -104,6 +149,30 @@ dl{margin:0;display:flex;flex-direction:column;gap:9px;flex:1}
 .more ul{margin:6px 0 0;padding-left:18px;color:var(--text-dim)}
 .more li{margin:3px 0;overflow-wrap:anywhere}
 .more small{color:var(--text-faint)}
+.notes{margin-top:12px;padding:10px 12px;border-left:3px solid var(--accent-border);background:var(--accent-bg);border-radius:0 10px 10px 0;font-size:13px}
+.notes-label{margin-bottom:4px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.notes blockquote{margin:0 0 8px;color:var(--text);overflow-wrap:anywhere}
+.notes blockquote:last-child{margin-bottom:0}
+.notes cite{display:block;font-style:normal;font-size:12px;color:var(--text-dim)}
+.notes cite a{color:var(--text-dim)}
+.cal{margin:22px 0 4px;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.cal-title{margin:0 0 12px;font-size:17px;letter-spacing:-.01em}
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px 22px}
+.cal-day h3{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--accent);display:flex;gap:8px;align-items:baseline}
+.cal-day h3 small{font-weight:500;color:var(--text-faint)}
+.cal-day ul,.cal-panel{list-style:none;margin:0;padding:0}
+.cal-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0;font-size:13.5px;border-top:1px dashed var(--border)}
+.cal-day li:first-child,.cal-panel li:first-child .cal-item{border-top:0}
+.cal-time{font-variant-numeric:tabular-nums;color:var(--text-dim);font-size:12.5px;min-width:52px}
+.cal-item a{color:var(--text);text-decoration:none;font-weight:600}
+.cal-item a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.cal-item small{color:var(--text-faint);font-size:12px;width:100%}
+.cal-panel-day{margin-top:8px;font-size:12px;font-weight:700;color:var(--accent)}
+.cal-panel li:first-child .cal-panel-day{margin-top:0}
+.links{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 12px}
+.link-chip{display:inline-flex;align-items:center;padding:3px 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);font-size:12.5px;font-weight:600;line-height:1.6;color:var(--text);text-decoration:none;transition:.15s}
+.link-chip:hover{border-color:var(--accent-border);color:var(--accent)}
+.link-mint{background:var(--new-bg);border-color:var(--new-border);color:var(--new)}
 .card-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;padding-top:10px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-faint);font-variant-numeric:tabular-nums}
 .card-meta a{color:var(--text-dim)}
 .empty,.empty-initial{grid-column:1/-1;text-align:center;color:var(--text-dim);padding:60px 0}
@@ -126,7 +195,9 @@ footer.site p{margin:6px 0}
   </div>
 </header>
 
-<main class="wrap">
+<div class="wrap layout">
+<main class="content">
+  {{TOP}}
   <div class="toolbar">
     <div class="tabs" role="group" aria-label="{{T_FILTER}}">{{TABS}}</div>
     <label class="sort">{{T_SORT}}
@@ -140,6 +211,8 @@ footer.site p{margin:6px 0}
     <p class="empty" id="empty" hidden>{{T_EMPTY}}</p>
   </section>
 </main>
+<aside class="side">{{SIDEBAR}}</aside>
+</div>
 
 <footer class="site">
   <div class="wrap">
