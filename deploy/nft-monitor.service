@@ -1,0 +1,24 @@
+[Unit]
+Description=NFT 打新机会追踪(grok 联网核查名单项目 + X 上发现新机会 → 微信/Telegram 推送 + SQLite)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=riskdesk
+Group=riskdesk
+WorkingDirectory=/var/lib/nft-monitor
+# 推送令牌与 grok 配置沿用 BTT 监控的;/etc/nft-monitor.env 可选,放 NFT_* 覆盖项
+EnvironmentFile=/etc/btt-monitor.env
+EnvironmentFile=-/etc/nft-monitor.env
+Environment=NFT_DB=/var/lib/nft-monitor/nft.sqlite
+Environment=NFT_EXPORT=/var/lib/nft-monitor/export.json
+Environment=HOME=/opt/riskdesk
+Environment=TZ=Asia/Shanghai
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/airdrop-site/nft/nft_monitor.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

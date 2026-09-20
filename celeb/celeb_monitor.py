@@ -45,6 +45,11 @@ except Exception:
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+# grok 周配额用完(402)时切 OpenAI 最便宜的一档接着跑;共用模块在仓库根 lib/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import ai_fallback  # noqa: E402
+
+
 def env(name, default=""):
     """CELEB_* 优先,其次同名 BTT_*(推送令牌、grok 配置与 BTT 监控共用)"""
     v = os.environ.get("CELEB_" + name)
@@ -426,6 +431,14 @@ def build_prompt(s, articles):
     )
 
 
+def build_openai_prompt(s, articles):
+    """备用链路没有 --json-schema,把输出格式直接写进提示词"""
+    fields = "、".join(ANALYSIS_KEYS)
+    return (build_prompt(s, articles)
+            + "\n最后只输出一个 JSON 对象(放在 ```json 代码块里),恰好包含这些字段:" + fields
+            + ";score 是 0 到 10 的整数,其余字段都是字符串。JSON 之外不要写别的。\n")
+
+
 def extract_json(stdout):
     s = stdout.strip()
     try:
@@ -452,6 +465,18 @@ def extract_json(stdout):
                 return inner
         except Exception:
             continue
+    # 逐个左花括号 raw_decode:OpenAI 备用链路没有 --json-schema,会在 JSON 前后说话
+    dec = json.JSONDecoder()
+    found = None
+    for m in re.finditer(r"\{", s):
+        try:
+            inner, _ = dec.raw_decode(s, m.start())
+        except Exception:
+            continue
+        if isinstance(inner, dict) and all(k in inner for k in ANALYSIS_KEYS):
+            found = inner
+    if found is not None:
+        return found
     raise RuntimeError("输出里没有合规 JSON: " + s[:300])
 
 
@@ -514,12 +539,15 @@ def analysis_worker():
                 arts = [{"title": row["title"], "url": row["url"], "source": row["source"], "summary": row["summary"]}]
             else:
                 arts[0]["summary"] = row["summary"]
-            stdout = run_grok(build_prompt(dict(row), arts))
+            stdout, _usd, provider = ai_fallback.ai_call(
+                lambda: run_grok(build_prompt(dict(row), arts)),
+                build_openai_prompt(dict(row), arts),
+                label="celeb-%s" % sid, web=False)
             analysis = normalize_analysis(extract_json(stdout))
             conn.execute("UPDATE stories SET analysis_status='done', analysis_json=?, analysis_raw=?, analysis_ts=?, analysis_error=NULL WHERE id=?",
                          (json.dumps(analysis, ensure_ascii=False), stdout[-4000:], now_ms(), sid))
             conn.commit()
-            log(f"速览完成 #{sid} {row['person'] or row['title'][:30]} → {analysis.get('status')} / {analysis.get('score')}分")
+            log(f"速览完成 #{sid} {row['person'] or row['title'][:30]} → {analysis.get('status')} / {analysis.get('score')}分 [{provider}]")
             event(conn, "analysis_done", f"#{sid} score={analysis.get('score')}")
         except Exception as e:
             err = str(e)[:800]

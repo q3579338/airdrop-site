@@ -31,12 +31,16 @@ try:
 except Exception:
     pass
 
+# grok 周配额用完(402)时切 OpenAI 最便宜的一档接着跑;共用模块在仓库根 lib/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "lib"))
+import ai_fallback  # noqa: E402
+
 # ---------- 配置 ----------
 TG_TOKEN = os.environ.get("BTT_TG_TOKEN", "").strip()
 TG_CHAT = os.environ.get("BTT_TG_CHAT", "").strip()
 PUSHPLUS_TOKEN = os.environ.get("BTT_PUSHPLUS_TOKEN", "").strip()
 BOARD_URL = os.environ.get("BTT_BOARD_URL", "https://bitcointalk.org/index.php?board=159.0")
-CHECK_EVERY_SEC = int(os.environ.get("BTT_CHECK_EVERY_SEC", "300"))
+CHECK_EVERY_SEC = int(os.environ.get("BTT_CHECK_EVERY_SEC", "120"))
 DB_PATH = os.environ.get("BTT_DB", "/var/lib/btt-monitor/btt.sqlite")
 EXPORT_PATH = os.environ.get("BTT_EXPORT", "/var/lib/btt-monitor/export.json")
 EXPORT_LIMIT = int(os.environ.get("BTT_EXPORT_LIMIT", "300"))
@@ -46,6 +50,8 @@ GROK_BIN = os.environ.get("BTT_GROK_BIN", "grok")
 GROK_MODEL = os.environ.get("BTT_GROK_MODEL", "grok-4.5")
 GROK_TIMEOUT_SEC = int(os.environ.get("BTT_GROK_TIMEOUT_SEC", "240"))
 GROK_PROXY = os.environ.get("BTT_GROK_PROXY", "").strip()  # 如 http://127.0.0.1:10809;空=直连
+# 备用链路(OpenAI)默认不联网:用户 09-20「BTT 速览不用联网」,且内置搜索 $0.01/次,速览量大不划算
+OPENAI_WEB = os.environ.get("BTT_OPENAI_WEB", "0") == "1"
 ANALYSIS_MAX_TRIES = 3
 POST_MAX_CHARS = 6000
 CST = timezone(timedelta(hours=8))
@@ -121,7 +127,7 @@ CREATE TABLE IF NOT EXISTS events (
 
 def open_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn = sqlite3.connect(DB_PATH, timeout=60)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
@@ -269,26 +275,52 @@ ANALYSIS_SCHEMA = {
 ANALYSIS_KEYS = list(ANALYSIS_SCHEMA["properties"].keys())
 
 
-def build_prompt(title, author, posted_at, text):
-    return (
+def build_prompt(title, author, posted_at, text, web=True):
+    """web=False(备用链路)时去掉外部核实要求,只按帖子正文判断,免得模型没联网还硬编外部结论"""
+    head = (
         "你是加密项目尽调助手。下面是 bitcointalk 山寨币公告板(Altcoin Announcements)一个新帖的标题与首楼正文"
-        "(HTML 已去除,可能被截断)。只根据帖子内容判断,不要臆造帖子里没有的信息;帖子没提到的就写「未提及」。\n"
-        "全部用简体中文作答,每个字段一到两句话,不要 Markdown。字段含义:\n"
+        "(HTML 已去除,可能被截断)。先读帖子,再用 X 搜索和网页搜索核实:官网与 GitHub 是否存在且活跃、官方 X 账号粉丝与近期互动、"
+        "是否已上交易所或矿池、有没有人报告骗局或抄袭。只写帖子里有或查到的事实,不要臆造;都没有就写「未提及」;"
+        "highlights 与 red_flags 里注明哪些来自外部核实。\n"
+    ) if web else (
+        "你是加密项目尽调助手。下面是 bitcointalk 山寨币公告板(Altcoin Announcements)一个新帖的标题与首楼正文"
+        "(HTML 已去除,可能被截断)。你这次没有联网工具,只根据帖子正文判断,不要臆造外部信息:"
+        "不要编造官网、GitHub、交易所、矿池或粉丝数之类的核实结论,帖子里没有的一律写「未提及」。\n"
+    )
+    return (
+        head
+        + "全部用简体中文作答,每个字段一到两句话,不要 Markdown。字段含义:\n"
         "name 项目名;kind 类型,只能取其一:代币发行 / ICO或预售 / 空投或Bounty / 矿币或PoW / NFT / DeFi协议 / 工具或服务 / 交易所或平台 / 其他 / 垃圾或广告;"
         "chain 所在链或平台;token 代币名称与代号;distribution 募资或分发方式(价格、总量、分配比例);highlights 亮点;"
         "red_flags 风险信号(匿名团队、无代码、承诺收益、仿冒抄袭、只发合约地址等);verdict 一句话结论;"
         "score 0 到 10 的整数,10 = 最值得跟进,0 = 纯垃圾或骗局;"
         "mining 挖矿方式,只能取其一:CPU可挖 / GPU可挖 / ASIC / 不可挖或非矿币 / 未提及(RandomX、yescrypt 等抗 ASIC 算法算 CPU可挖)。\n\n"
+        "最后只输出一个包含以上全部字段的 JSON 对象,放在 ```json 代码块里。\n\n"
         f"标题:{title}\n楼主:{author or '未知'}\n发帖时间:{posted_at or '未知'}\n\n正文:\n{text}\n"
     )
 
 
 def extract_json(stdout):
-    """grok 结构化输出可能是裸 JSON,也可能带外壳;逐层尝试"""
+    """grok 输出可能是裸 JSON,也可能带外壳(--output-format json 的正文在 text 里);逐层尝试"""
     s = stdout.strip()
     try:
         obj = json.loads(s)
     except Exception:
+        obj = None
+    if isinstance(obj, dict) and isinstance(obj.get("text"), str) and not all(k in obj for k in ANALYSIS_KEYS):
+        # 联网模式:模型在 JSON 前后会说话,取文本里最后一个含全部字段的对象
+        dec = json.JSONDecoder()
+        found = None
+        for m in re.finditer(r"\{", obj["text"]):
+            try:
+                inner, _ = dec.raw_decode(obj["text"], m.start())
+            except Exception:
+                continue
+            if isinstance(inner, dict) and all(k in inner for k in ANALYSIS_KEYS):
+                found = inner
+        if found is not None:
+            return found
+        s = obj["text"]
         obj = None
     if isinstance(obj, dict):
         if all(k in obj for k in ANALYSIS_KEYS):
@@ -312,6 +344,18 @@ def extract_json(stdout):
                 return inner
         except Exception:
             continue
+    # 逐个左花括号 raw_decode:OpenAI 备用链路常在 ```json 代码块前后说话,取最后一个合规对象
+    dec = json.JSONDecoder()
+    found = None
+    for m in re.finditer(r"\{", s):
+        try:
+            inner, _ = dec.raw_decode(s, m.start())
+        except Exception:
+            continue
+        if isinstance(inner, dict) and all(k in inner for k in ANALYSIS_KEYS):
+            found = inner
+    if found is not None:
+        return found
     raise RuntimeError("输出里没有合规 JSON: " + s[:300])
 
 
@@ -325,11 +369,11 @@ def run_grok(prompt):
         for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
             env[k] = GROK_PROXY
         env["NO_PROXY"] = "localhost,127.0.0.1,::1,.local"
-    argv = [GROK_BIN, "--prompt-file", path, "-m", GROK_MODEL, "--always-approve", "--no-subagents",
-            "--disable-web-search", "--json-schema", json.dumps(ANALYSIS_SCHEMA, ensure_ascii=False)]
+    # 09-15 起开联网核实(X 搜索 + 网页);--json-schema 与联网工具不兼容,改取 json 外壳里的文本再抠 JSON
+    argv = [GROK_BIN, "--prompt-file", path, "-m", GROK_MODEL, "--always-approve", "--no-subagents", "--output-format", "json"]
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                              timeout=GROK_TIMEOUT_SEC, env=env)
+                              timeout=max(GROK_TIMEOUT_SEC, 420), env=env)
     finally:
         try:
             os.unlink(path)
@@ -355,7 +399,37 @@ def normalize_analysis(obj):
     return out
 
 
+def write_retry(conn, sql, params=(), tries=20):
+    """库被短暂锁住时重试写入;09-15 曾因一次 database is locked 把速览线程整个带走,之后再无速览"""
+    for i in range(tries):
+        try:
+            conn.execute(sql, params)
+            conn.commit()
+            return
+        except sqlite3.OperationalError as e:
+            if "locked" not in str(e) and "busy" not in str(e):
+                raise
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            log(f"库被锁,15 秒后重试写入({i + 1}/{tries})")
+            stop_event.wait(15)
+    raise RuntimeError("库一直被锁,放弃这次写入")
+
+
 def analysis_worker():
+    """线程外壳:速览循环出任何异常都记日志后 30 秒重来,线程不死"""
+    import traceback as _tb
+    while not stop_event.is_set():
+        try:
+            analysis_worker_loop()
+        except Exception:
+            log("速览线程异常,30 秒后重启:\n" + _tb.format_exc()[-1200:])
+            stop_event.wait(30)
+
+
+def analysis_worker_loop():
     """后台线程:逐条处理 pending 帖子。与主线程各用各的连接。"""
     conn = open_db()
     log("速览线程启动")
@@ -367,29 +441,28 @@ def analysis_worker():
             stop_event.wait(5)
             continue
         tid = row["topic_id"]
-        conn.execute("UPDATE posts SET analysis_status='running', analysis_tries=analysis_tries+1 WHERE topic_id=?", (tid,))
-        conn.commit()
+        write_retry(conn, "UPDATE posts SET analysis_status='running', analysis_tries=analysis_tries+1 WHERE topic_id=?", (tid,))
         tries = row["analysis_tries"] + 1
         try:
             author, posted_at, text = row["author"], row["posted_at"], row["post_text"]
             if not text:
                 author, posted_at, text = fetch_first_post(tid)
-                conn.execute("UPDATE posts SET author=?, posted_at=?, post_text=? WHERE topic_id=?", (author, posted_at, text, tid))
-                conn.commit()
-            stdout = run_grok(build_prompt(row["title"], author, posted_at, text))
+                write_retry(conn, "UPDATE posts SET author=?, posted_at=?, post_text=? WHERE topic_id=?", (author, posted_at, text, tid))
+            stdout, _usd, provider = ai_fallback.ai_call(
+                lambda: run_grok(build_prompt(row["title"], author, posted_at, text)),
+                build_prompt(row["title"], author, posted_at, text, web=OPENAI_WEB),
+                label="btt-%s" % tid, web=OPENAI_WEB)
             analysis = normalize_analysis(extract_json(stdout))
-            conn.execute(
+            write_retry(conn,
                 "UPDATE posts SET analysis_status='done', analysis_json=?, analysis_raw=?, analysis_ts=?, analysis_error=NULL WHERE topic_id=?",
                 (json.dumps(analysis, ensure_ascii=False), stdout[-4000:], now_ms(), tid))
-            conn.commit()
-            log(f"速览完成 #{tid} {row['title'][:40]} → {analysis.get('kind')} / {analysis.get('score')}分")
+            log(f"速览完成 #{tid} {row['title'][:40]} → {analysis.get('kind')} / {analysis.get('score')}分 [{provider}]")
             event(conn, "analysis_done", f"#{tid} score={analysis.get('score')}")
         except Exception as e:
             err = str(e)[:800]
             status = "failed" if tries >= ANALYSIS_MAX_TRIES else "pending"
-            conn.execute("UPDATE posts SET analysis_status=?, analysis_error=?, analysis_ts=? WHERE topic_id=?",
-                         (status, err, now_ms(), tid))
-            conn.commit()
+            write_retry(conn, "UPDATE posts SET analysis_status=?, analysis_error=?, analysis_ts=? WHERE topic_id=?",
+                        (status, err, now_ms(), tid))
             log(f"速览失败 #{tid}(第 {tries} 次): {err[:200]}")
             event(conn, "analysis_failed", f"#{tid} try={tries} {err[:300]}")
             if status == "pending":
@@ -471,8 +544,10 @@ def refresh_titles(conn, topics):
     for tid, title, url, pinned in topics:
         cur = conn.execute("UPDATE posts SET title=? WHERE topic_id=? AND title<>?", (title, tid, title))
         changed += cur.rowcount
+    # 必须无条件提交:Python sqlite3 执行 UPDATE 就隐式开了写事务,哪怕 0 行命中;
+    # 以前只在有变更时 commit,写锁会一直挂到整轮等待结束,速览线程写库 60 秒超时 → database is locked(09-15 线程因此死掉)
+    conn.commit()
     if changed:
-        conn.commit()
         log(f"同步 {changed} 条标题变更")
 
 
