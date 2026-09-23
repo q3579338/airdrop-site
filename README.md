@@ -8,7 +8,7 @@
 | `/btt/` BTT 新帖 | `btt/btt_monitor.py` 导出的 `export.json`(bitcointalk 山寨板新帖 + grok 中文速览) |
 | `/celeb/` 名人发币 | `celeb/celeb_monitor.py` 导出的 `export.json`(名人/政客/网红发币新闻事件 + grok 中文速览 + 去哪订阅) |
 | `/nft/` NFT 打新 | `nft/nft_monitor.py` 导出的 `export.json`(名单项目 + AI 在 X 上发现的项目,grok 联网核查阶段 / 铸造时间 / 价格,变动推送与铸造提醒) |
-| `/en/` `/en/btt/` `/en/celeb/` `/en/nft/` | 同三页的英文壳(`build.mjs` 里 `LOCALES.en`),互带 hreflang;项目描述/速览是中文来源,英文页原样保留并在顶部注明 |
+| `/en/` `/en/btt/` `/en/celeb/` `/en/nft/` | 同四页的英文版(`build.mjs` 里 `LOCALES.en`),互带 hreflang;数据字段是中文来源,按 条目自带 `xxxEn` > 人工译文缓存 `data/i18n-en.json` > 中文原文 取值,本页仍有缺译时顶部才出现提示 |
 
 ## 名人发币监控(`celeb/`)
 
@@ -44,6 +44,20 @@ KOL 推一波 NFT 之后,阶段、铸造时间、价格随时会改。这个进�
 - `btt/btt_monitor.py` BTT 监控:原版 `autofish/monitorbitcoin.py` 的推送逻辑原样保留(TG 每帖一条 + 微信一轮合并一条,首次只记基准),新增 SQLite 落库、后台线程 grok 速览、export.json 导出
 - `deploy/` nginx 站点、`airdrop-site` 服务+定时器、`btt-monitor` / `celeb-monitor` 服务与 env 模板、`setup.sh` 一键安装(幂等)
 - `fixture/` 真实接口返回 + BTT / 名人发币导出样例,本地测试用
+
+## 英文译文缓存(`data/i18n-en.json`)
+
+雷达 / 监控产出的字段都是中文,英文页不调任何翻译 API,只查这份人工译文缓存:键 = `plain()` 规范化后的中文原文(去 markdown、压空白),值 = 英文。同一句话出现在多个条目 / 页面只译一次;原文一更新就自然变成缺译、回落中文,不会张冠李戴。文件随代码部署(服务器 `/opt/airdrop-site/data/i18n-en.json`,生成器按 `__dirname` 读取,可用 `AIRDROP_I18N_EN` 覆盖),读不到就全部回落中文,不影响生成。
+
+补译流程(新空投 / 新帖 / NFT 核查结果会持续产生新的中文,需要定期补):
+
+```bash
+node tools/list-missing-en.mjs                    # 拉线上四个 data.json 用同一生成器渲染,打印各页缺译条数与英文页中文残留
+node tools/list-missing-en.mjs --out todo.json    # 缺译写成 {"中文": ""} 骨架(--page airdrop,celeb 可只看某几页,--print 逐条打印)
+node tools/list-missing-en.mjs --merge todo.json  # 填好英文后并回缓存(空串跳过,键排序写回),再部署
+```
+
+专有名词 / 代币名 / 项目名 / 链名保持原样。生成日志末尾会打印 `en cache N, M strings still Chinese`。
 
 ## 本地测试
 
