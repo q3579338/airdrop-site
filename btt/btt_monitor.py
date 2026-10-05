@@ -305,11 +305,11 @@ FALLBACK_MAX_CHARS = int(os.environ.get("BTT_FALLBACK_MAX_CHARS", "1500"))
 
 
 def build_fallback_prompt(title, text, web=False):
-    """grok 耗尽时给 codex 用的精简版:只喂标题 + 正文前 1500 字,字段说明压到一行。
+    """grok 耗尽时给备用(gemini / codex)用的精简版:只喂标题 + 正文前 1500 字,字段说明压到一行。
 
-    codex 每次调用光它自己的系统提示词就上万 token,提示词能省一点是一点;
-    输出格式交给 --output-schema(ai_fallback 把 ANALYSIS_SCHEMA 传下去),
-    所以这里连「放在 json 代码块里」都不用写。
+    备用每次调用光它自己的系统提示词就上万 token,提示词能省一点是一点;
+    输出格式交给 ai_fallback(把 ANALYSIS_SCHEMA 传下去:codex 走 --output-schema,
+    gemini 没有这参数就写进提示词再剥代码块),所以这里不用自己写格式要求。
     """
     body = (text or "")[:FALLBACK_MAX_CHARS]
     head = ("你是加密项目尽调助手。下面是 bitcointalk 山寨板一个新帖的标题与正文节选(可能被截断)。"

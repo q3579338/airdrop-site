@@ -436,10 +436,10 @@ FALLBACK_MAX_CHARS = int(os.environ.get("CELEB_FALLBACK_MAX_CHARS", "1500"))
 
 
 def build_fallback_prompt(s, articles):
-    """grok 耗尽时给 codex 用的精简版:只喂人物/代号 + 前 6 条标题(合计截到 1500 字)。
+    """grok 耗尽时给备用(gemini / codex)用的精简版:只喂人物/代号 + 前 6 条标题(合计截到 1500 字)。
 
-    codex 每次调用光它自己的系统提示词就上万 token,新闻列表不必给满 12 条;
-    输出格式交给 --output-schema(ai_fallback 把 ANALYSIS_SCHEMA 传下去),不用再写进提示词。
+    备用每次调用光它自己的系统提示词就上万 token,新闻列表不必给满 12 条;
+    输出格式交给 ai_fallback(把 ANALYSIS_SCHEMA 传下去),不用再写进提示词。
     """
     lines = "\n".join(
         ("- [%s] %s" % (a.get("source") or "?", a.get("title") or ""))
