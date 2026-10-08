@@ -19,6 +19,7 @@
 """
 import argparse
 import json
+import collections
 import os
 import re
 import sqlite3
@@ -72,7 +73,9 @@ MINTING_TRACK_EVERY_SEC = int(os.environ.get("NFT_MINTING_TRACK_EVERY_SEC", "720
 QUIET_TRACK_EVERY_SEC = int(os.environ.get("NFT_QUIET_TRACK_EVERY_SEC", "604800"))  # 预热 / 没有明确日程 48h
 ENDED_TRACK_EVERY_SEC = int(os.environ.get("NFT_ENDED_TRACK_EVERY_SEC", "604800"))  # 已售罄 / 已上市 / 取消 7 天
 DISCOVERED_FACTOR = float(os.environ.get("NFT_DISCOVERED_FACTOR", "24"))            # AI 发现的项目在以上基础上乘这个系数
-DISCOVER_EVERY_SEC = int(os.environ.get("NFT_DISCOVER_EVERY_SEC", "43200"))
+DISCOVER_EVERY_SEC = int(os.environ.get("NFT_DISCOVER_EVERY_SEC", "172800"))  # 09-23 用户"NFT 没啥意思砍成 1/4":12h → 48h
+TRACK_SCALE = float(os.environ.get("NFT_TRACK_SCALE", "4"))  # 09-23:所有分档间隔再乘这个系数(已申请项目除外,铸造提醒不能丢)
+MAX_TRACK_PER_HOUR = int(os.environ.get("NFT_MAX_TRACK_PER_HOUR", "2"))  # 每小时最多核查几次;grok 耗尽恢复后积压的项目按这个速度慢慢补,别两小时烧 20% 周额度
 DISCOVER_MAX_NEW = int(os.environ.get("NFT_DISCOVER_MAX_NEW", "2"))       # 每轮最多收几个新项目
 DISCOVER_MAX_URGENT = int(os.environ.get("NFT_DISCOVER_MAX_URGENT", "2"))  # 其中最多几个立刻核查(09-16:Arc 主网日 AI 把 8 个全标成今天开铸)
 # 新发现的项目:只有线索说「正在铸造 / 今明两天开铸」的才立刻核查并推送,其余排到 12 小时后慢慢补
@@ -96,6 +99,23 @@ PARTICIPATION_PATH = os.environ.get("NFT_PARTICIPATION", os.path.join(HERE, ".."
 ENV_APPLIED = {h.strip().lstrip("@").lower() for h in os.environ.get("NFT_MY_APPLIED", "").split(",") if h.strip()}
 MY_APPLIED = set(ENV_APPLIED)
 MAX_TRIES = 3
+# 09-23 用户:"这周分流给 chatgpt 做" —— NFT 核查/发现改走 codex(ChatGPT 订阅登录,联网检索),到期自动切回 grok
+AI_PROVIDER = (os.environ.get("NFT_AI_PROVIDER") or "grok").strip().lower()
+CODEX_UNTIL = (os.environ.get("NFT_CODEX_UNTIL") or "").strip()  # ISO 时间,过了就回 grok;空 = 一直用 codex
+
+
+def use_codex():
+    if AI_PROVIDER != "codex":
+        return False
+    if not CODEX_UNTIL:
+        return True
+    try:
+        return datetime.now(CST) < datetime.fromisoformat(CODEX_UNTIL)
+    except ValueError:
+        return True
+
+
+RECENT_TRACKS = collections.deque()  # 最近一小时的核查时刻(毫秒)
 CST = timezone(timedelta(hours=8))
 
 NO_PUSH = False  # --no-push:本地 / 临时库测试时不推送
@@ -497,6 +517,9 @@ def push_discovered(conn, items):
 # ---------- grok ----------
 def run_grok(prompt, timeout=None):
     """返回 (text, cost_usd)。不关联网:核查靠的就是 X 搜索"""
+    if use_codex():
+        text, _tokens = ai_fallback.codex_call(prompt, web=True, timeout=timeout or GROK_TIMEOUT_SEC, label="nft")
+        return text, None
     fd, path = tempfile.mkstemp(prefix="nft-", suffix=".md")
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(prompt)
@@ -763,6 +786,11 @@ def stage_of(snap):
 
 
 def schedule_interval(row, snap, mint_ts):
+    base = _schedule_interval(row, snap, mint_ts)
+    return base if row["handle"] in MY_APPLIED else int(base * max(TRACK_SCALE, 1))
+
+
+def _schedule_interval(row, snap, mint_ts):
     """分档:已申请项目铸造当天冲刺 > 铸造前后 > 已定日期 > 白名单开放 > 没消息 > 已结束;AI 发现的项目再乘 DISCOVERED_FACTOR"""
     now = now_ms()
     today = datetime.now(CST).date()
@@ -814,7 +842,7 @@ def track_project(conn, row):
     except Exception as e:
         err = str(e)[:800]
         # 402 / 连败写进共用标记:BTT 速览与空投雷达据此改走 codex,本进程据此暂停
-        if ai_fallback.note_grok_fail(e):
+        if not use_codex() and ai_fallback.note_grok_fail(e):
             log("grok 配额耗尽,NFT 追踪暂停(不走 codex 备用)")
             event(conn, "grok_exhausted", err[:300])
         streak = int(meta_get(conn, "fail_streak", 0) or 0) + 1
@@ -832,7 +860,8 @@ def track_project(conn, row):
             wechat_send("NFT 追踪异常", f"grok 核查已连续失败 {streak} 次,最新错误:{err[:300]}")
         return
     ts = now_ms()
-    ai_fallback.note_grok_ok()  # grok 又能用了:清共用标记,另外三条链路也一起切回来
+    if not use_codex():
+        ai_fallback.note_grok_ok()  # grok 又能用了:清共用标记,另外三条链路也一起切回来
     meta_set(conn, "fail_streak", 0)
     meta_set(conn, "last_error", None)
     meta_set(conn, "last_track_ts", ts)
@@ -1091,7 +1120,7 @@ _paused_logged_at = 0
 def grok_paused(conn):
     """grok 耗尽标记还在冷却期内 → 本轮什么都不干。日志十分钟一条,别刷屏"""
     global _paused_logged_at
-    if not ai_fallback.grok_exhausted():
+    if use_codex() or not ai_fallback.grok_exhausted():
         return False
     if now_ms() - _paused_logged_at > 600_000:
         _paused_logged_at = now_ms()
@@ -1126,7 +1155,12 @@ def run_one_job(conn):
                     break
     else:
         row = conn.execute("SELECT * FROM projects WHERE active=1 AND next_track_ts<=? ORDER BY origin='discovered', next_track_ts LIMIT 1", (now,)).fetchone()
+    while RECENT_TRACKS and RECENT_TRACKS[0] < now - 3600 * 1000:
+        RECENT_TRACKS.popleft()
+    if row is not None and MAX_TRACK_PER_HOUR > 0 and len(RECENT_TRACKS) >= MAX_TRACK_PER_HOUR:
+        return False  # 本小时核查次数已满,等下一轮(发现也一起让路)
     if row is not None:
+        RECENT_TRACKS.append(now)
         track_project(conn, row)
         return True
     if DISCOVER_ENABLED and not over_budget and int(meta_get(conn, "next_discover_ts", 0) or 0) <= now:
@@ -1134,7 +1168,7 @@ def run_one_job(conn):
             discover(conn)
         except Exception as e:
             meta_set(conn, "next_discover_ts", now + 3600 * 1000)
-            if ai_fallback.note_grok_fail(e):
+            if not use_codex() and ai_fallback.note_grok_fail(e):
                 log("grok 配额耗尽,NFT 追踪暂停(不走 codex 备用)")
                 event(conn, "grok_exhausted", str(e)[:300])
             log(f"发现一轮失败: {str(e)[:300]}")

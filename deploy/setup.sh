@@ -21,7 +21,7 @@ mkdir -p "$OUT"
 chown www-data:www-data "$OUT"
 chown -R root:root "$SRC"
 chmod -R a+rX "$SRC"
-sed -i 's/\r$//' "$SRC/build.mjs" "$SRC/btt/btt_monitor.py" "$SRC/celeb/celeb_monitor.py" "$SRC"/deploy/*
+sed -i 's/\r$//' "$SRC/build.mjs" "$SRC/btt/btt_monitor.py" "$SRC/celeb/celeb_monitor.py" "$SRC/nft/nft_monitor.py" "$SRC"/deploy/*
 
 # ---- nginx ----
 install -m 644 "$SRC/deploy/$SITE.nginx.conf" "/etc/nginx/sites-available/$SITE"
@@ -52,6 +52,13 @@ if [ ! -f /etc/celeb-monitor.env ]; then
 fi
 install -m 644 "$SRC/deploy/celeb-monitor.service" /etc/systemd/system/celeb-monitor.service
 
+# ---- NFT 打新追踪(Python:requests + 标准库;grok 联网;推送令牌沿用 /etc/btt-monitor.env) ----
+NFT_DIR=/var/lib/nft-monitor
+mkdir -p "$NFT_DIR"
+chown riskdesk:riskdesk "$NFT_DIR"
+chmod 755 "$NFT_DIR"
+install -m 644 "$SRC/deploy/nft-monitor.service" /etc/systemd/system/nft-monitor.service
+
 # ---- 页面生成 ----
 install -m 644 "$SRC/deploy/airdrop-site.service" /etc/systemd/system/airdrop-site.service
 install -m 644 "$SRC/deploy/airdrop-site.timer" /etc/systemd/system/airdrop-site.timer
@@ -60,6 +67,8 @@ systemctl enable --now btt-monitor.service
 systemctl restart btt-monitor.service
 systemctl enable --now celeb-monitor.service
 systemctl restart celeb-monitor.service
+systemctl enable --now nft-monitor.service
+systemctl restart nft-monitor.service
 systemctl enable --now airdrop-site.timer
 sleep 3
 systemctl start airdrop-site.service
@@ -76,7 +85,10 @@ grep -c 'class="card"' /tmp/airdrop-check-btt.html | sed 's/^/BTT 卡片数: /'
 code=$(curl -sk -o /tmp/airdrop-check-celeb.html -w '%{http_code}' -H "Host: $SITE" https://127.0.0.1/celeb/)
 echo "https://127.0.0.1/celeb/ (Host: $SITE) → $code"
 grep -c 'class="card"' /tmp/airdrop-check-celeb.html | sed 's/^/名人发币卡片数: /'
-for p in /en/ /en/btt/ /en/celeb/; do
+code=$(curl -sk -o /tmp/airdrop-check-nft.html -w '%{http_code}' -H "Host: $SITE" https://127.0.0.1/nft/)
+echo "https://127.0.0.1/nft/ (Host: $SITE) → $code"
+grep -c 'class="card"' /tmp/airdrop-check-nft.html | sed 's/^/NFT 卡片数: /'
+for p in /en/ /en/btt/ /en/celeb/ /en/nft/; do
   code=$(curl -sk -o /tmp/airdrop-check-en.html -w '%{http_code}' -H "Host: $SITE" "https://127.0.0.1$p")
   echo "https://127.0.0.1$p (Host: $SITE) → $code $(grep -o '<html lang="[^"]*"' /tmp/airdrop-check-en.html)"
 done
@@ -84,5 +96,7 @@ systemctl is-active btt-monitor.service | sed 's/^/btt-monitor: /'
 journalctl -u btt-monitor -n 5 --no-pager -o cat
 systemctl is-active celeb-monitor.service | sed 's/^/celeb-monitor: /'
 journalctl -u celeb-monitor -n 8 --no-pager -o cat
+systemctl is-active nft-monitor.service | sed 's/^/nft-monitor: /'
+journalctl -u nft-monitor -n 8 --no-pager -o cat
 systemctl list-timers airdrop-site.timer --no-pager | head -2
 echo "== 完成"

@@ -75,7 +75,7 @@ const loadNft = () => loadExport('nft', 'nft-export.json', NFT_JSON);
 // 友链的 href 两种语言共用,标签按下标对应 L.friends。
 const FRIEND_URLS = [
   'https://satloot.com/', 'https://sim.satloot.com/', 'https://bnbbang.com/', 'https://bang.satloot.com/',
-  'https://earn.satloot.com/', 'https://game.satloot.com/', 'https://tool.satloot.com/', 'https://trx.satloot.com/', 'https://faucet.satloot.com/',
+  'https://earn.satloot.com/', 'https://game.satloot.com/', 'https://tool.satloot.com/', 'https://trx.satloot.com/', 'https://skill.satloot.com/', 'https://fish.satloot.com/', 'https://faucet.satloot.com/',
 ];
 const MON_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 // BTT 速览的 kind / mining 是 grok --json-schema 里的固定枚举(见 btt/btt_monitor.py),英文页按表翻;表外原样保留
@@ -107,7 +107,7 @@ const LOCALES = {
     date: (o) => `${o.year}-${o.month}-${o.day}`,
     dateTime: (o) => `${o.year}-${o.month}-${o.day} ${o.hour}:${o.minute}`,
     friendsLabel: '友情链接:',
-    friends: ['satloot 项目总览', '合约模拟器', 'BNBBANG 镜像宇宙', 'BTCBANG 比特宇宙', 'riskdesk 风控面板', 'satloot 游戏厅', 'satloot 工具站', 'TRX 质押收益计算器', '比特币测试网水龙头'],
+    friends: ['satloot 项目总览', '合约模拟器', 'BNBBANG 镜像宇宙', 'BTCBANG 比特宇宙', 'riskdesk 风控面板', 'satloot 游戏厅', 'satloot 工具站', 'TRX 质押收益计算器', 'satloot 技能站', '钓鱼天气预报·鱼情查询', '比特币测试网水龙头'],
     footerSync: (time) => `本页每 5 分钟同步一次,本次生成于 ${time}(北京时间)。只是信息汇总,不构成任何投资建议。空投与新币常伴随钓鱼站与仿冒钱包,交互前请核对官方渠道,不要向任何页面输入助记词或私钥。`,
     enumKind: (v) => v,
     enumMining: (v) => v,
@@ -228,7 +228,7 @@ const LOCALES = {
     date: (o) => `${MON_EN[Number(o.month) - 1]} ${Number(o.day)}, ${o.year}`,
     dateTime: (o) => `${MON_EN[Number(o.month) - 1]} ${Number(o.day)}, ${o.year} ${o.hour}:${o.minute}`,
     friendsLabel: 'Links:',
-    friends: ['satloot project index', 'Futures simulator', 'BNBBANG mirror universe', 'BTCBANG Bitcoin universe', 'riskdesk risk panel', 'satloot arcade', 'satloot tools', 'TRX staking yield calculator', 'Bitcoin testnet faucet'],
+    friends: ['satloot project index', 'Futures simulator', 'BNBBANG mirror universe', 'BTCBANG Bitcoin universe', 'riskdesk risk panel', 'satloot arcade', 'satloot tools', 'TRX staking yield calculator', 'satloot skills', 'Fishing Weather & Bite Index', 'Bitcoin testnet faucet'],
     footerSync: (time) => `This page syncs every 5 minutes; this copy was generated ${time} (UTC+8). Information only, not investment advice. Airdrops and new coins attract phishing sites and fake wallets: verify official channels before interacting, and never enter a seed phrase or private key on any page.`,
     enumKind: (v) => BTT_KIND_EN[v] ?? tx(v, LOCALES.en),
     enumMining: (v) => BTT_MINING_EN[v] ?? tx(v, LOCALES.en),
