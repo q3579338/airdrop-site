@@ -1,0 +1,26 @@
+# SatLoot 空投雷达
+
+> SatLoot 空投雷达整理加密空投与测试网参与线索，并提供 Bitcointalk 新帖、名人发币事件和 NFT 打新监控的公开速览。
+
+项目卡片包含参与方式、阶段、发现时间、来源线索与风险提示；中文和英文各有四个栏目。内容包含 AI 整理和公开来源信息，参与前应核对项目官网、官方公告、费用与当前资格。收录、热度或测试网积分都不代表确定的空投、代币价值或收益。数据新鲜度以各页的生成时间和最近扫描时间为准。
+
+## 中文栏目
+
+- [空投与测试网项目](https://airdrop.satloot.com/): 按项目去重的参与线索和风险提示。
+- [Bitcointalk 新帖](https://airdrop.satloot.com/btt/): 山寨币板新帖与中文速览。
+- [名人发币事件](https://airdrop.satloot.com/celeb/): 名人、政客和网红相关发币新闻、来源与订阅线索。
+- [NFT 打新监控](https://airdrop.satloot.com/nft/): 白名单、铸造阶段、时间、价格和变更线索。
+
+## English sections
+
+- [Airdrop radar](https://airdrop.satloot.com/en/): Airdrop and testnet participation leads.
+- [Bitcointalk posts](https://airdrop.satloot.com/en/btt/): New posts and summaries.
+- [Celebrity token events](https://airdrop.satloot.com/en/celeb/): Public news and source links.
+- [NFT launch monitor](https://airdrop.satloot.com/en/nft/): Allowlist and mint information.
+
+## 公开数据
+
+- [空投项目 JSON](https://airdrop.satloot.com/data.json): 页面公开项目与扫描、生成时间。
+- [Bitcointalk JSON](https://airdrop.satloot.com/btt/data.json): 公开帖子及速览数据。
+- [名人事件 JSON](https://airdrop.satloot.com/celeb/data.json): 公开事件及来源数据。
+- [NFT 项目 JSON](https://airdrop.satloot.com/nft/data.json): 页面公开项目与监控结果。
